@@ -37,7 +37,7 @@ namespace CasADi{
 class IntegratorInternal : public FXInternal{
 public:
   /** \brief  Constructor */
-  IntegratorInternal(const FX& f, const FX& g);
+  IntegratorInternal(const FX& f);
 
   /** \brief  Destructor */
   virtual ~IntegratorInternal()=0;
@@ -49,8 +49,11 @@ public:
   virtual void deepCopyMembers(std::map<SharedObjectNode*,SharedObject>& already_copied);
   
   /** \brief  Create a new integrator */
-  virtual IntegratorInternal* create(const FX& f, const FX& g) const = 0;
+  virtual IntegratorInternal* create(const FX& f) const = 0;
   
+  /** \brief Set adjoint equations -- to be deleted */
+  void setG(const FX& g){ g_ = g;}
+
   /** \brief  Print solver statistics */
   virtual void printStats(std::ostream &stream) const{}
 

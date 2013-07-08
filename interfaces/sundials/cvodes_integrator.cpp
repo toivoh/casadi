@@ -26,26 +26,24 @@
 using namespace std;
 namespace CasADi{
 
-CVodesIntegrator::CVodesIntegrator(){ 
-}
+  CVodesIntegrator::CVodesIntegrator(){ 
+  }
 
-CVodesIntegrator::CVodesIntegrator(const FX& f, const FX& g){
-  assignNode(new CVodesInternal(f,g));
-}
+  CVodesIntegrator::CVodesIntegrator(const FX& f){
+    assignNode(new CVodesInternal(f));
+  }
 
-CVodesInternal* CVodesIntegrator::operator->(){
-  return (CVodesInternal*)(FX::operator->());
-}
+  CVodesInternal* CVodesIntegrator::operator->(){
+    return static_cast<CVodesInternal*>(FX::operator->());
+  }
 
-const CVodesInternal* CVodesIntegrator::operator->() const{
-  return (const CVodesInternal*)(FX::operator->());
+  const CVodesInternal* CVodesIntegrator::operator->() const{
+    return static_cast<const CVodesInternal*>(FX::operator->());
+  }
 
-}
-
-bool CVodesIntegrator::checkNode() const{
-  return dynamic_cast<const CVodesInternal*>(get());
-}
+  bool CVodesIntegrator::checkNode() const{
+    return dynamic_cast<const CVodesInternal*>(get());
+  }
 
 } // namespace CasADi
-
 

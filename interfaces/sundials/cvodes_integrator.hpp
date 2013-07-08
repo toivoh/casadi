@@ -27,52 +27,52 @@
 
 namespace CasADi{
   
-// Forward declaration of internal class 
-class CVodesInternal;
+  // Forward declaration of internal class 
+  class CVodesInternal;
 
-/** Function that integrates the ODE:
+  /** Function that integrates the ODE:
 
-  @copydoc DAE_doc
+      @copydoc DAE_doc
   
-  A call to evaluate will integrate to the end.
+      A call to evaluate will integrate to the end.
   
-  You can retrieve the entire state trajectory as follows, after the evaluate call: 
-  Call reset. Then call integrate(t_i) and getOuput for a series of times t_i.
+      You can retrieve the entire state trajectory as follows, after the evaluate call: 
+      Call reset. Then call integrate(t_i) and getOuput for a series of times t_i.
   
 
-*/
-class CVodesIntegrator : public SundialsIntegrator{
-public:
-
-  /** \brief  Default constructor */
-  CVodesIntegrator();
-  
-  /** \brief  Create an integrator for explicit ODEs
-  *   \param f dynamical system
-  * \copydoc scheme_DAEInput
-  * \copydoc scheme_DAEOutput
-  *   \param g backwards system
-  * \copydoc scheme_RDAEInput
-  * \copydoc scheme_RDAEOutput
   */
-  explicit CVodesIntegrator(const FX& f, const FX& g=FX());
-  
-  /** \brief  Access functions of the node */
-  CVodesInternal* operator->();
-  const CVodesInternal* operator->() const;
+  class CVodesIntegrator : public SundialsIntegrator{
+  public:
 
-  /// Check if the node is pointing to the right type of object
-  virtual bool checkNode() const;
+    /** \brief  Default constructor */
+    CVodesIntegrator();
   
-  /// Static creator function
-  #ifdef SWIG
-  %callback("%s_cb");
-  #endif
-  static Integrator creator(const FX& f, const FX& g){ return CVodesIntegrator(f,g);}
-  #ifdef SWIG
-  %nocallback;
-  #endif
-};
+    /** \brief  Create an integrator for explicit ODEs
+     *   \param f dynamical system
+     * \copydoc scheme_DAEInput
+     * \copydoc scheme_DAEOutput
+     *   \param g backwards system
+     * \copydoc scheme_RDAEInput
+     * \copydoc scheme_RDAEOutput
+     */
+    explicit CVodesIntegrator(const FX& f);
+  
+    /** \brief  Access functions of the node */
+    CVodesInternal* operator->();
+    const CVodesInternal* operator->() const;
+
+    /// Check if the node is pointing to the right type of object
+    virtual bool checkNode() const;
+  
+    /// Static creator function
+#ifdef SWIG
+    %callback("%s_cb");
+#endif
+    static Integrator creator(const FX& f, int nfwd, int nadj){ return CVodesIntegrator(f);}
+#ifdef SWIG
+    %nocallback;
+#endif
+  };
 
 } // namespace CasADi
 

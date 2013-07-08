@@ -34,58 +34,57 @@
 
 namespace CasADi{
 
-// Forward declaration of internal class
-class IdasInternal;
+  // Forward declaration of internal class
+  class IdasInternal;
 
-/** Interface to IDAS from the Sundials suite.
+  /** Interface to IDAS from the Sundials suite.
 
-   @copydoc IdasIntegrator_doc
+      @copydoc IdasIntegrator_doc
   
-   \author Joel Andersson
-   \date 2010
-*/
-
-class IdasIntegrator : public SundialsIntegrator{
-public:
-
-  /// Default constructor
-  IdasIntegrator();
-  
-  /// Create an integrator for a fully implicit DAE with quadrature states (nz is the number of states not to be included in the state vector)
-  
-    
-  /** \brief  Create an integrator for a fully implicit DAE with quadrature states 
-  * (nz is the number of states not to be included in the state vector)
-  *   \param f dynamical system
-  * \copydoc scheme_DAEInput
-  * \copydoc scheme_DAEOutput
-  *   \param g backwards system
-  * \copydoc scheme_RDAEInput
-  * \copydoc scheme_RDAEOutput
+      \author Joel Andersson
+      \date 2010
   */
-  explicit IdasIntegrator(const FX& f, const FX& g=FX());
 
-  /// Access functions of the node
-  IdasInternal* operator->();
+  class IdasIntegrator : public SundialsIntegrator{
+  public:
 
-  /// Const access functions of the node
-  const IdasInternal* operator->() const;
+    /// Default constructor
+    IdasIntegrator();
   
-  /// Check if the node is pointing to the right type of object
-  virtual bool checkNode() const;
+    /// Create an integrator for a fully implicit DAE with quadrature states (nz is the number of states not to be included in the state vector)
   
-  /// Correct the initial value for yp and z after resetting the solver
-  void correctInitialConditions();
+    /** \brief  Create an integrator for a fully implicit DAE with quadrature states 
+     * (nz is the number of states not to be included in the state vector)
+     *   \param f dynamical system
+     * \copydoc scheme_DAEInput
+     * \copydoc scheme_DAEOutput
+     *   \param g backwards system
+     * \copydoc scheme_RDAEInput
+     * \copydoc scheme_RDAEOutput
+     */
+    explicit IdasIntegrator(const FX& f);
 
-  /// Static creator function
-  #ifdef SWIG
-  %callback("%s_cb");
-  #endif
-  static Integrator creator(const FX& f, const FX& g){ return IdasIntegrator(f,g);}
-  #ifdef SWIG
-  %nocallback;
-  #endif
-};
+    /// Access functions of the node
+    IdasInternal* operator->();
+
+    /// Const access functions of the node
+    const IdasInternal* operator->() const;
+  
+    /// Check if the node is pointing to the right type of object
+    virtual bool checkNode() const;
+  
+    /// Correct the initial value for yp and z after resetting the solver
+    void correctInitialConditions();
+
+    /// Static creator function
+#ifdef SWIG
+    %callback("%s_cb");
+#endif
+    static Integrator creator(const FX& f, int nfwd, int nadj){ return IdasIntegrator(f);}
+#ifdef SWIG
+    %nocallback;
+#endif
+  };
 
 } // namespace CasADi
 

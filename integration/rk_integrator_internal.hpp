@@ -35,7 +35,7 @@ class RKIntegratorInternal : public IntegratorInternal{
 public:
   
   /// Constructor
-  explicit RKIntegratorInternal(const FX& f, const FX& g);
+  explicit RKIntegratorInternal(const FX& f);
 
   /// Deep copy data members
   virtual void deepCopyMembers(std::map<SharedObjectNode*,SharedObject>& already_copied);
@@ -44,7 +44,7 @@ public:
   virtual RKIntegratorInternal* clone() const{ return new RKIntegratorInternal(*this);}
 
   /// Create a new integrator
-  virtual RKIntegratorInternal* create(const FX& f, const FX& g) const{ return new RKIntegratorInternal(f,g);}
+  virtual RKIntegratorInternal* create(const FX& f) const{ return new RKIntegratorInternal(f);}
   
   /// Destructor
   virtual ~RKIntegratorInternal();

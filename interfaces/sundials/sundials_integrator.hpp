@@ -27,26 +27,26 @@
 
 namespace CasADi{
   
-/// Forward declaration of internal class
-class SundialsInternal;
+  /// Forward declaration of internal class
+  class SundialsInternal;
 
-class SundialsIntegrator : public Integrator{
-public:
-  /// Default constructor
-  SundialsIntegrator();
+  class SundialsIntegrator : public Integrator{
+  public:
+    /// Default constructor
+    SundialsIntegrator();
 
-  /// Access functions of the node
-  SundialsInternal* operator->();
+    /// Access functions of the node
+    SundialsInternal* operator->();
 
-  /// Access functions of the node
-  const SundialsInternal* operator->() const;
+    /// Access functions of the node
+    const SundialsInternal* operator->() const;
 
-  /// Check if the node is pointing to the right type of object
-  virtual bool checkNode() const;
+    /// Check if the node is pointing to the right type of object
+    virtual bool checkNode() const;
   
-  /// Set a stop time for the forward integration
-  void setStopTime(double tf);
-};
+    /// Set a stop time for the forward integration
+    void setStopTime(double tf);
+  };
 
 } // namespace CasADi
 

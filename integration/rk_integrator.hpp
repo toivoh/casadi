@@ -27,29 +27,29 @@
 
 namespace CasADi{
   
-class RKIntegratorInternal;
+  class RKIntegratorInternal;
   
-/**
-  \brief Fixed step Runge-Kutta integrator
-  ODE integrator based on explicit Runge-Kutta methods
+  /**
+     \brief Fixed step Runge-Kutta integrator
+     ODE integrator based on explicit Runge-Kutta methods
   
-  The method is still under development
+     The method is still under development
   
-  \author Joel Andersson
-  \date 2011
-*/
-class RKIntegrator : public Integrator {
+     \author Joel Andersson
+     \date 2011
+  */
+  class RKIntegrator : public Integrator {
   public:
     /** \brief  Default constructor */
     RKIntegrator();
     
     /** \brief  Create an integrator for explicit ODEs
-    *   \param f dynamical system
-    * \copydoc scheme_DAEInput
-    * \copydoc scheme_DAEOutput
-    *
-    */
-    explicit RKIntegrator(const FX& f, const FX& g=FX());
+     *   \param f dynamical system
+     * \copydoc scheme_DAEInput
+     * \copydoc scheme_DAEOutput
+     *
+     */
+    explicit RKIntegrator(const FX& f);
 
     /// Access functions of the node
     RKIntegratorInternal* operator->();
@@ -59,18 +59,15 @@ class RKIntegrator : public Integrator {
     virtual bool checkNode() const;
 
     /// Static creator function
-    #ifdef SWIG
+#ifdef SWIG
     %callback("%s_cb");
-    #endif
-    static Integrator creator(const FX& f, const FX& g){ return RKIntegrator(f,g);}
-    #ifdef SWIG
+#endif
+    static Integrator creator(const FX& f, int nfwd, int nadj){ return RKIntegrator(f);}
+#ifdef SWIG
     %nocallback;
-    #endif
-
-    /// @Joris: This would be an alternative
-    static integratorCreator getCreator(){return creator;}
+#endif
     
-};
+  };
 
 } // namespace CasADi
 

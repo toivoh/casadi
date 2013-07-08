@@ -27,28 +27,28 @@
 using namespace std;
 namespace CasADi{
 
-IdasIntegrator::IdasIntegrator(){ 
-}
+  IdasIntegrator::IdasIntegrator(){ 
+  }
 
-IdasIntegrator::IdasIntegrator(const FX& f, const FX& g){
-  assignNode(new IdasInternal(f,g));
-}
+  IdasIntegrator::IdasIntegrator(const FX& f){
+    assignNode(new IdasInternal(f));
+  }
 
-IdasInternal* IdasIntegrator::operator->(){
-  return (IdasInternal*)(FX::operator->());
-}
+  IdasInternal* IdasIntegrator::operator->(){
+    return static_cast<IdasInternal*>(FX::operator->());
+  }
 
-const IdasInternal* IdasIntegrator::operator->() const{
-  return (const IdasInternal*)(FX::operator->());
-}
+  const IdasInternal* IdasIntegrator::operator->() const{
+    return static_cast<const IdasInternal*>(FX::operator->());
+  }
 
-bool IdasIntegrator::checkNode() const{
-  return dynamic_cast<const IdasInternal*>(get());
-}
+  bool IdasIntegrator::checkNode() const{
+    return dynamic_cast<const IdasInternal*>(get());
+  }
 
-void IdasIntegrator::correctInitialConditions(){
-  (*this)->correctInitialConditions();
-}
+  void IdasIntegrator::correctInitialConditions(){
+    (*this)->correctInitialConditions();
+  }
 
 } // namespace CasADi
 

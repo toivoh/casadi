@@ -35,7 +35,7 @@ OUTPUTSCHEME(IntegratorOutput)
 using namespace std;
 namespace CasADi{
 
-IntegratorInternal::IntegratorInternal(const FX& f, const FX& g) : f_(f), g_(g){
+IntegratorInternal::IntegratorInternal(const FX& f) : f_(f){
   // set default options
   setOption("name","unnamed_integrator"); // name of the function 
   
@@ -548,7 +548,8 @@ FX IntegratorInternal::getDerivative(int nfwd, int nadj){
   
   // Create integrator for augmented DAE
   Integrator integrator;
-  integrator.assignNode(create(aug_dae.first,aug_dae.second));
+  integrator.assignNode(create(aug_dae.first));
+  integrator->setG(aug_dae.second);
   
   // Copy options
   integrator.setOption(dictionary());

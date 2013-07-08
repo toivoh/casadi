@@ -66,7 +66,7 @@ namespace CasADi{
   typedef LPSolver (*LPSolverCreator)(const LPStructure& st);
 
   /// Function pointer to an integrator creator function
-  typedef Integrator (*integratorCreator)(const FX& f, const FX& g);
+  typedef Integrator (*integratorCreator)(const FX& f, int nfwd, int nadj);
 
   /// Function pointer to a QP solver creator function
   typedef QPSolver (*QPSolverCreator)(const QPStructure& st);

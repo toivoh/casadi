@@ -27,24 +27,24 @@
 using namespace std;
 namespace CasADi{
 
-SundialsIntegrator::SundialsIntegrator(){
-}
+  SundialsIntegrator::SundialsIntegrator(){
+  }
 
-SundialsInternal* SundialsIntegrator::operator->(){
-  return (SundialsInternal*)(FX::operator->());
-}
+  SundialsInternal* SundialsIntegrator::operator->(){
+    return static_cast<SundialsInternal*>(FX::operator->());
+  }
 
-const SundialsInternal* SundialsIntegrator::operator->() const{
-   return (const SundialsInternal*)(FX::operator->()); 
-}
+  const SundialsInternal* SundialsIntegrator::operator->() const{
+    return static_cast<const SundialsInternal*>(FX::operator->()); 
+  }
   
-bool SundialsIntegrator::checkNode() const{
-  return dynamic_cast<const SundialsInternal*>(get())!=0;
-}
+  bool SundialsIntegrator::checkNode() const{
+    return dynamic_cast<const SundialsInternal*>(get())!=0;
+  }
   
-void SundialsIntegrator::setStopTime(double tf){
-  (*this)->setStopTime(tf);
-}
+  void SundialsIntegrator::setStopTime(double tf){
+    (*this)->setStopTime(tf);
+  }
   
 } // namespace CasADi
 

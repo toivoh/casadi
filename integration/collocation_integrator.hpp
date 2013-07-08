@@ -27,33 +27,33 @@
 
 namespace CasADi{
   
-class CollocationIntegratorInternal;
+  class CollocationIntegratorInternal;
   
-/**
-  \brief Collocation integrator
-  ODE/DAE integrator based on collocation
+  /**
+     \brief Collocation integrator
+     ODE/DAE integrator based on collocation
   
-  The method is still under development
+     The method is still under development
   
-  @copydoc DAE_doc
+     @copydoc DAE_doc
   
-  \author Joel Andersson
-  \date 2011
-*/
-class CollocationIntegrator : public Integrator {
+     \author Joel Andersson
+     \date 2011
+  */
+  class CollocationIntegrator : public Integrator {
   public:
     /** \brief  Default constructor */
     CollocationIntegrator();
     
     /** \brief  Create an integrator for explicit ODEs
-    *   \param f dynamical system
-    * \copydoc scheme_DAEInput
-    * \copydoc scheme_DAEOutput
-    *   \param g backwards system
-    * \copydoc scheme_RDAEInput
-    * \copydoc scheme_RDAEOutput
-    */
-    explicit CollocationIntegrator(const FX& f, const FX& g=FX());
+     *   \param f dynamical system
+     * \copydoc scheme_DAEInput
+     * \copydoc scheme_DAEOutput
+     *   \param g backwards system
+     * \copydoc scheme_RDAEInput
+     * \copydoc scheme_RDAEOutput
+     */
+    explicit CollocationIntegrator(const FX& f);
 
     /// Access functions of the node
     CollocationIntegratorInternal* operator->();
@@ -63,18 +63,15 @@ class CollocationIntegrator : public Integrator {
     virtual bool checkNode() const;
 
     /// Static creator function
-    #ifdef SWIG
+#ifdef SWIG
     %callback("%s_cb");
-    #endif
-    static Integrator creator(const FX& f, const FX& g){ return CollocationIntegrator(f,g);}
-    #ifdef SWIG
+#endif
+    static Integrator creator(const FX& f, int nfwd, int nadj){ return CollocationIntegrator(f);}
+#ifdef SWIG
     %nocallback;
-    #endif
-
-    /// @Joris: This would be an alternative
-    static integratorCreator getCreator(){return creator;}
+#endif
     
-};
+  };
 
 } // namespace CasADi
 
