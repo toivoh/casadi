@@ -58,11 +58,8 @@ namespace CasADi{
      *   \param f dynamical system
      * \copydoc scheme_DAEInput
      * \copydoc scheme_DAEOutput
-     *   \param g backwards system
-     * \copydoc scheme_RDAEInput
-     * \copydoc scheme_RDAEOutput
      */
-    explicit IdasIntegrator(const FX& f);
+    explicit IdasIntegrator(const FX& f, int nfwd=0, int nadj=0);
 
     /// Access functions of the node
     IdasInternal* operator->();
@@ -80,7 +77,7 @@ namespace CasADi{
 #ifdef SWIG
     %callback("%s_cb");
 #endif
-    static Integrator creator(const FX& f, int nfwd, int nadj){ return IdasIntegrator(f);}
+    static Integrator creator(const FX& f, int nfwd, int nadj){ return IdasIntegrator(f,nfwd,nadj);}
 #ifdef SWIG
     %nocallback;
 #endif

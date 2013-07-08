@@ -32,7 +32,7 @@ namespace CasADi{
 
   IdasInternal* IdasInternal::clone() const{
     // Return a deep copy
-    IdasInternal* node = new IdasInternal(f_);
+    IdasInternal* node = new IdasInternal(f_,0,0);
     node->setG(g_);
     node->setOption(dictionary());
     node->jac_ = jac_;
@@ -46,7 +46,7 @@ namespace CasADi{
     jacB_ = deepcopy(jacB_,already_copied);
   }
 
-  IdasInternal::IdasInternal(const FX& f) : SundialsInternal(f){
+  IdasInternal::IdasInternal(const FX& f, int nfwd, int nadj) : SundialsInternal(f,nfwd,nadj){
     addOption("suppress_algebraic",          OT_BOOLEAN,          false,          "Supress algebraic variables in the error testing");
     addOption("calc_ic",                     OT_BOOLEAN,          true,           "Use IDACalcIC to get consistent initial conditions.");
     addOption("calc_icB",                    OT_BOOLEAN,          GenericType(),  "Use IDACalcIC to get consistent initial conditions for backwards system [default: equal to calc_ic].");

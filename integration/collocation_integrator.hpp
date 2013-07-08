@@ -49,11 +49,8 @@ namespace CasADi{
      *   \param f dynamical system
      * \copydoc scheme_DAEInput
      * \copydoc scheme_DAEOutput
-     *   \param g backwards system
-     * \copydoc scheme_RDAEInput
-     * \copydoc scheme_RDAEOutput
      */
-    explicit CollocationIntegrator(const FX& f);
+    explicit CollocationIntegrator(const FX& f, int nfwd=0, int nadj=0);
 
     /// Access functions of the node
     CollocationIntegratorInternal* operator->();
@@ -66,7 +63,7 @@ namespace CasADi{
 #ifdef SWIG
     %callback("%s_cb");
 #endif
-    static Integrator creator(const FX& f, int nfwd, int nadj){ return CollocationIntegrator(f);}
+    static Integrator creator(const FX& f, int nfwd, int nadj){ return CollocationIntegrator(f,nfwd,nadj);}
 #ifdef SWIG
     %nocallback;
 #endif

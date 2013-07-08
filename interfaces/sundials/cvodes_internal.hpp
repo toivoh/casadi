@@ -44,7 +44,7 @@ namespace CasADi{
     friend class CVodesIntegrator;
   public:
     /** \brief  Constructor */
-    explicit CVodesInternal(const FX& f);
+    explicit CVodesInternal(const FX& f, int nfwd, int nadj);
 
     /** \brief  Deep copy data members */
     virtual void deepCopyMembers(std::map<SharedObjectNode*,SharedObject>& already_copied);
@@ -53,7 +53,7 @@ namespace CasADi{
     virtual CVodesInternal* clone() const;
   
     /** \brief  Create a new integrator */
-    virtual CVodesInternal* create(const FX& f) const{ return new CVodesInternal(f);}
+    virtual CVodesInternal* create(const FX& f, int nfwd, int nadj) const{ return new CVodesInternal(f,nfwd,nadj);}
 
     /** \brief  Destructor */
     virtual ~CVodesInternal();
