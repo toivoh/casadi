@@ -30,8 +30,8 @@ namespace CasADi{
   IdasIntegrator::IdasIntegrator(){ 
   }
 
-  IdasIntegrator::IdasIntegrator(const FX& f, int nfwd, int nadj){
-    assignNode(new IdasInternal(f,nfwd,nadj));
+  IdasIntegrator::IdasIntegrator(const FX& dae, int nfwd, int nadj){
+    assignNode(new IdasInternal(dae,nfwd,nadj));
   }
 
   IdasInternal* IdasIntegrator::operator->(){

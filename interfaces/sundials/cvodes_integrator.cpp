@@ -29,8 +29,8 @@ namespace CasADi{
   CVodesIntegrator::CVodesIntegrator(){ 
   }
 
-  CVodesIntegrator::CVodesIntegrator(const FX& f, int nfwd, int nadj){
-    assignNode(new CVodesInternal(f,nfwd,nadj));
+  CVodesIntegrator::CVodesIntegrator(const FX& dae, int nfwd, int nadj){
+    assignNode(new CVodesInternal(dae,nfwd,nadj));
   }
 
   CVodesInternal* CVodesIntegrator::operator->(){

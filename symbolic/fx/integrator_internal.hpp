@@ -49,9 +49,10 @@ public:
   virtual void deepCopyMembers(std::map<SharedObjectNode*,SharedObject>& already_copied);
   
   /** \brief  Create a new integrator */
-  virtual IntegratorInternal* create(const FX& f, int nfwd, int nadj) const = 0;
+  virtual IntegratorInternal* create(const FX& dae, int nfwd, int nadj) const = 0;
   
-  /** \brief Set adjoint equations -- to be deleted */
+  /** \brief Set equations -- to be deleted */
+  void setF(const FX& f){ f_ = f;}
   void setG(const FX& g){ g_ = g;}
 
   /** \brief  Print solver statistics */
@@ -105,13 +106,16 @@ public:
 
   /// Integration horizon
   double t0_, tf_;
-  
-  /// ODE/DAE forward integration function
-  FX f_;
+
+  /// DAE
+  FX dae_;
   
   /// Number of derivatives to be calculated
   int nfwd_, nadj_;
 
+  /// ODE/DAE forward integration function
+  FX f_;
+  
   /// ODE/DAE backward integration function, if any
   FX g_;
   

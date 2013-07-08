@@ -32,7 +32,8 @@ namespace CasADi{
 
   CVodesInternal* CVodesInternal::clone() const{
     // Return a deep copy
-    CVodesInternal* node = new CVodesInternal(f_,0,0);
+    CVodesInternal* node = new CVodesInternal(dae_,0,0);
+    node->setF(f_);
     node->setG(g_);
     node->setOption(dictionary());
     node->jac_ = jac_;
@@ -40,7 +41,7 @@ namespace CasADi{
     return node;
   }
 
-  CVodesInternal::CVodesInternal(const FX& f, int nfwd, int nadj) : SundialsInternal(f,nfwd,nadj){
+  CVodesInternal::CVodesInternal(const FX& dae, int nfwd, int nadj) : SundialsInternal(dae,nfwd,nadj){
     addOption("linear_multistep_method",          OT_STRING,              "bdf",          "Integrator scheme","bdf|adams");
     addOption("nonlinear_solver_iteration",       OT_STRING,              "newton",       "","newton|functional");
     addOption("fsens_all_at_once",                OT_BOOLEAN,             true,           "Calculate all right hand sides of the sensitivity equations at once");

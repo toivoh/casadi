@@ -35,7 +35,7 @@ OUTPUTSCHEME(IntegratorOutput)
 using namespace std;
 namespace CasADi{
 
-  IntegratorInternal::IntegratorInternal(const FX& f, int nfwd, int nadj) : f_(f), nfwd_(nfwd), nadj_(nadj){
+  IntegratorInternal::IntegratorInternal(const FX& dae, int nfwd, int nadj) : dae_(dae), nfwd_(nfwd), nadj_(nadj){
     // set default options
     setOption("name","unnamed_integrator"); // name of the function 
   
@@ -52,6 +52,8 @@ namespace CasADi{
   
     inputScheme_ = SCHEME_IntegratorInput;
     outputScheme_ = SCHEME_IntegratorOutput;
+
+    f_ = dae_;
   }
 
   IntegratorInternal::~IntegratorInternal(){ 
@@ -548,7 +550,8 @@ namespace CasADi{
   
     // Create integrator for augmented DAE
     Integrator integrator;
-    integrator.assignNode(create(aug_dae.first,nfwd,nadj));
+    integrator.assignNode(create(dae_,(1+nfwd_)*(1+nfwd) + nadj_*nadj,(1+nfwd_)*nadj) + nadj_*(1+nfwd_));
+    integrator->setF(aug_dae.first);
     integrator->setG(aug_dae.second);
   
     // Copy options

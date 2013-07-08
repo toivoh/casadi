@@ -49,7 +49,7 @@ namespace CasADi{
      * \copydoc scheme_DAEOutput
      *
      */
-    explicit RKIntegrator(const FX& f, int nfwd=0, int nadj=0);
+    explicit RKIntegrator(const FX& dae, int nfwd=0, int nadj=0);
 
     /// Access functions of the node
     RKIntegratorInternal* operator->();
@@ -62,7 +62,7 @@ namespace CasADi{
 #ifdef SWIG
     %callback("%s_cb");
 #endif
-    static Integrator creator(const FX& f, int nfwd, int nadj){ return RKIntegrator(f,nfwd,nadj);}
+    static Integrator creator(const FX& dae, int nfwd, int nadj){ return RKIntegrator(dae,nfwd,nadj);}
 #ifdef SWIG
     %nocallback;
 #endif

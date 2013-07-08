@@ -26,9 +26,9 @@
 #include "sundials_integrator.hpp"
 
 /**
-* \defgroup IdasIntegrator_doc
+ * \defgroup IdasIntegrator_doc
   
-  @copydoc DAE_doc
+ @copydoc DAE_doc
   
 */
 
@@ -59,7 +59,7 @@ namespace CasADi{
      * \copydoc scheme_DAEInput
      * \copydoc scheme_DAEOutput
      */
-    explicit IdasIntegrator(const FX& f, int nfwd=0, int nadj=0);
+    explicit IdasIntegrator(const FX& dae, int nfwd=0, int nadj=0);
 
     /// Access functions of the node
     IdasInternal* operator->();
@@ -77,7 +77,7 @@ namespace CasADi{
 #ifdef SWIG
     %callback("%s_cb");
 #endif
-    static Integrator creator(const FX& f, int nfwd, int nadj){ return IdasIntegrator(f,nfwd,nadj);}
+    static Integrator creator(const FX& dae, int nfwd, int nadj){ return IdasIntegrator(dae,nfwd,nadj);}
 #ifdef SWIG
     %nocallback;
 #endif

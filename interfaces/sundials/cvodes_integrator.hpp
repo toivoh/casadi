@@ -52,7 +52,7 @@ namespace CasADi{
      * \copydoc scheme_DAEInput
      * \copydoc scheme_DAEOutput
      */
-    explicit CVodesIntegrator(const FX& f, int nfwd=0, int nadj=0);
+    explicit CVodesIntegrator(const FX& dae, int nfwd=0, int nadj=0);
   
     /** \brief  Access functions of the node */
     CVodesInternal* operator->();
@@ -65,7 +65,7 @@ namespace CasADi{
 #ifdef SWIG
     %callback("%s_cb");
 #endif
-    static Integrator creator(const FX& f, int nfwd, int nadj){ return CVodesIntegrator(f,nfwd,nadj);}
+    static Integrator creator(const FX& dae, int nfwd, int nadj){ return CVodesIntegrator(dae,nfwd,nadj);}
 #ifdef SWIG
     %nocallback;
 #endif

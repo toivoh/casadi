@@ -36,7 +36,7 @@ namespace CasADi{
   class SundialsInternal : public IntegratorInternal{
   public:
     /** \brief  Constructor */
-    explicit SundialsInternal(const FX& f, int nfwd, int nadj);
+    explicit SundialsInternal(const FX& dae, int nfwd, int nadj);
 
     /** \brief  Destructor */
     virtual ~SundialsInternal()=0;

@@ -46,7 +46,7 @@ namespace CasADi{
   public:
   
     /** \brief  Constructor */
-    explicit IdasInternal(const FX& f, int nfwd, int nadj);
+    explicit IdasInternal(const FX& dae, int nfwd, int nadj);
 
     /** \brief  Copy constructor */
     //  IdasInternal(const IdasInternal& integrator);
@@ -55,7 +55,7 @@ namespace CasADi{
     virtual IdasInternal* clone() const;
   
     /** \brief  Create a new integrator */
-    virtual IdasInternal* create(const FX& f, int nfwd, int nadj) const{ return new IdasInternal(f,nfwd,nadj);}
+    virtual IdasInternal* create(const FX& dae, int nfwd, int nadj) const{ return new IdasInternal(dae,nfwd,nadj);}
 
     /** \brief  Deep copy data members */
     virtual void deepCopyMembers(std::map<SharedObjectNode*,SharedObject>& already_copied);
