@@ -48,7 +48,7 @@ namespace CasADi{
     addOption("augmented_options",        OT_DICTIONARY,  GenericType(), "Options to be passed down to the augmented integrator, if one is constructed.");
   
     // Negative number of parameters for consistancy checking
-    np_ = -1;
+    nfp_ = -1;
   
     inputScheme_ = SCHEME_IntegratorInput;
     outputScheme_ = SCHEME_IntegratorOutput;
@@ -172,12 +172,12 @@ namespace CasADi{
     casadi_assert_message(f_.getNumOutputs()==DAE_NUM_OUT,"Wrong number of outputs for the DAE callback function");
     casadi_assert_message(f_.input(DAE_X).dense(),"State vector must be dense in the DAE callback function");
     casadi_assert_message(f_.output(DAE_ODE).dense(),"Right hand side vector must be dense in the DAE callback function");
-    nx_ = f_.input(DAE_X).numel();
-    nz_ = f_.input(DAE_Z).numel();
-    nq_ = f_.output(DAE_QUAD).numel();
-    np_  = f_.input(DAE_P).numel();
-    casadi_assert_message(f_.output(DAE_ODE).numel()==nx_,"Inconsistent dimensions. Expecting DAE_ODE output of size " << nx_ << ", but got " << f_.output(DAE_ODE).numel() << " instead.");
-    casadi_assert_message(f_.output(DAE_ALG).numel()==nz_,"Inconsistent dimensions. Expecting DAE_ALG output of size " << nz_ << ", but got " << f_.output(DAE_ALG).numel() << " instead.");
+    nfx_ = f_.input(DAE_X).numel();
+    nfz_ = f_.input(DAE_Z).numel();
+    nfq_ = f_.output(DAE_QUAD).numel();
+    nfp_  = f_.input(DAE_P).numel();
+    casadi_assert_message(f_.output(DAE_ODE).numel()==nfx_,"Inconsistent dimensions. Expecting DAE_ODE output of size " << nfx_ << ", but got " << f_.output(DAE_ODE).numel() << " instead.");
+    casadi_assert_message(f_.output(DAE_ALG).numel()==nfz_,"Inconsistent dimensions. Expecting DAE_ALG output of size " << nfz_ << ", but got " << f_.output(DAE_ALG).numel() << " instead.");
   
     // Initialize, get and assert dimensions of the backwards integration
     if(g_.isNull()){
@@ -191,9 +191,9 @@ namespace CasADi{
       nrz_ = g_.input(RDAE_RZ).numel();
       nrp_ = g_.input(RDAE_RP).numel();
       nrq_ = g_.output(RDAE_QUAD).numel();
-      casadi_assert_message(g_.input(RDAE_P).numel()==np_,"Inconsistent dimensions. Expecting RDAE_P input of size " << np_ << ", but got " << g_.input(RDAE_P).numel() << " instead.");
-      casadi_assert_message(g_.input(RDAE_X).numel()==nx_,"Inconsistent dimensions. Expecting RDAE_X input of size " << nx_ << ", but got " << g_.input(RDAE_X).numel() << " instead.");
-      casadi_assert_message(g_.input(RDAE_Z).numel()==nz_,"Inconsistent dimensions. Expecting RDAE_Z input of size " << nz_ << ", but got " << g_.input(RDAE_Z).numel() << " instead.");
+      casadi_assert_message(g_.input(RDAE_P).numel()==nfp_,"Inconsistent dimensions. Expecting RDAE_P input of size " << nfp_ << ", but got " << g_.input(RDAE_P).numel() << " instead.");
+      casadi_assert_message(g_.input(RDAE_X).numel()==nfx_,"Inconsistent dimensions. Expecting RDAE_X input of size " << nfx_ << ", but got " << g_.input(RDAE_X).numel() << " instead.");
+      casadi_assert_message(g_.input(RDAE_Z).numel()==nfz_,"Inconsistent dimensions. Expecting RDAE_Z input of size " << nfz_ << ", but got " << g_.input(RDAE_Z).numel() << " instead.");
       casadi_assert_message(g_.output(RDAE_ODE).numel()==nrx_,"Inconsistent dimensions. Expecting RDAE_ODE output of size " << nrx_ << ", but got " << g_.output(RDAE_ODE).numel() << " instead.");
       casadi_assert_message(g_.output(RDAE_ALG).numel()==nrz_,"Inconsistent dimensions. Expecting RDAE_ALG input of size " << nrz_ << ", but got " << g_.output(RDAE_ALG).numel() << " instead.");
     }
@@ -220,7 +220,7 @@ namespace CasADi{
       // consistency check
       dae_.init(false);
       int nx_orig = dae_.input(DAE_X).size();
-      casadi_assert(nx_ == (1+nfwd_)*nx_orig);
+      casadi_assert(nfx_ == (1+nfwd_)*nx_orig);
       casadi_assert(nrx_ == nadj_*nx_orig);
     }
   
@@ -229,7 +229,7 @@ namespace CasADi{
 
     {
       std::stringstream ss;
-      ss << "Integrator dimensions: nx=" << nx_ << ", nz="<< nz_ << ", nq=" << nq_ << ", np=" << np_;
+      ss << "Integrator dimensions: nx=" << nfx_ << ", nz="<< nfz_ << ", nq=" << nfq_ << ", np=" << nfp_;
       log("IntegratorInternal::init",ss.str());
     }
   
@@ -678,8 +678,8 @@ namespace CasADi{
     dd.resize(INTEGRATOR_NUM_OUT);
     fill(dd.begin(),dd.end(),MX());
     for(int dir=-1; dir<nfwd; ++dir){
-      if( nx_>0){ dd[INTEGRATOR_XF]  =  xf_aug[Slice(  xf_offset, xf_offset +  nx_)];  xf_offset +=  nx_;}
-      if( nq_>0){ dd[INTEGRATOR_QF]  =  qf_aug[Slice(  qf_offset, qf_offset +  nq_)];  qf_offset +=  nq_; }
+      if( nfx_>0){ dd[INTEGRATOR_XF]  =  xf_aug[Slice(  xf_offset, xf_offset +  nfx_)];  xf_offset +=  nfx_;}
+      if( nfq_>0){ dd[INTEGRATOR_QF]  =  qf_aug[Slice(  qf_offset, qf_offset +  nfq_)];  qf_offset +=  nfq_; }
       if(nrx_>0){ dd[INTEGRATOR_RXF] = rxf_aug[Slice( rxf_offset,rxf_offset + nrx_)]; rxf_offset += nrx_; }
       if(nrq_>0){ dd[INTEGRATOR_RQF] = rqf_aug[Slice( rqf_offset,rqf_offset + nrq_)]; rqf_offset += nrq_; }
       ret_out.insert(ret_out.end(),dd.begin(),dd.end());
@@ -689,8 +689,8 @@ namespace CasADi{
     dd.resize(INTEGRATOR_NUM_IN);
     fill(dd.begin(),dd.end(),MX());
     for(int dir=0; dir<nadj; ++dir){
-      if(  nx_>0){ dd[INTEGRATOR_X0]  = rxf_aug[Slice(rxf_offset, rxf_offset + nx_ )]; rxf_offset += nx_;  }
-      if(  np_>0){ dd[INTEGRATOR_P]   = rqf_aug[Slice(rqf_offset, rqf_offset + np_ )]; rqf_offset += np_;  }
+      if(  nfx_>0){ dd[INTEGRATOR_X0]  = rxf_aug[Slice(rxf_offset, rxf_offset + nfx_ )]; rxf_offset += nfx_;  }
+      if(  nfp_>0){ dd[INTEGRATOR_P]   = rqf_aug[Slice(rqf_offset, rqf_offset + nfp_ )]; rqf_offset += nfp_;  }
       if( nrx_>0){ dd[INTEGRATOR_RX0] =  xf_aug[Slice(xf_offset,   xf_offset + nrx_)];  xf_offset += nrx_; }
       if( nrp_>0){ dd[INTEGRATOR_RP]  =  qf_aug[Slice(qf_offset,   qf_offset + nrp_)];  qf_offset += nrp_; }
       ret_out.insert(ret_out.end(),dd.begin(),dd.end());

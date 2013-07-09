@@ -138,10 +138,10 @@ namespace CasADi{
     casadi_assert_message(fabs(sumAll(D_num)-1)<1e-9,"Check on collocation coefficients");
   
     // Initial state
-    MX X0("X0",nx_);
+    MX X0("X0",nfx_);
   
     // Parameters
-    MX P("P",np_);
+    MX P("P",nfp_);
   
     // Backward state
     MX RX0("RX0",nrx_);
@@ -150,8 +150,8 @@ namespace CasADi{
     MX RP("RP",nrp_);
   
     // Collocated differential states and algebraic variables
-    int nX = (nk*(deg+1)+1)*(nx_+nrx_);
-    int nZ = nk*deg*(nz_+nrz_);
+    int nX = (nk*(deg+1)+1)*(nfx_+nrx_);
+    int nZ = nk*deg*(nfz_+nrz_);
   
     // Unknowns
     MX V("V",nX+nZ);
@@ -181,8 +181,8 @@ namespace CasADi{
       // For all time points
       for(int j=0; j<nj; ++j){
         // Get expressions for the differential state
-        X[k][j] = V[range(offset,offset+nx_)];
-        offset += nx_;
+        X[k][j] = V[range(offset,offset+nfx_)];
+        offset += nfx_;
         RX[k][j] = V[range(offset,offset+nrx_)];
         offset += nrx_;
       
@@ -191,8 +191,8 @@ namespace CasADi{
       
         // Get expressions for the algebraic variables
         if(j>0){
-          Z[k][j-1] = V[range(offset,offset+nz_)];
-          offset += nz_;
+          Z[k][j-1] = V[range(offset,offset+nfz_)];
+          offset += nfz_;
           RZ[k][j-1] = V[range(offset,offset+nrz_)];
           offset += nrz_;
         }
@@ -207,7 +207,7 @@ namespace CasADi{
     g.reserve(2*(nk+1));
   
     // Quadrature expressions
-    MX QF = MX::zeros(nq_);
+    MX QF = MX::zeros(nfq_);
     MX RQF = MX::zeros(nrq_);
   
     // Counter
@@ -242,12 +242,12 @@ namespace CasADi{
         g.push_back(h_mx*f_out[DAE_ODE] - xp_jk);
       
         // Add the algebraic conditions
-        if(nz_>0){
+        if(nfz_>0){
           g.push_back(f_out[DAE_ALG]);
         }
       
         // Add the quadrature
-        if(nq_>0){
+        if(nfq_>0){
           QF += Q[j]*h_mx*f_out[DAE_QUAD];
         }
       
@@ -447,7 +447,7 @@ namespace CasADi{
           
           // Save the differential states
           const DMatrix& x = has_startup_integrator ? startup_integrator_.output(INTEGRATOR_XF) : input(INTEGRATOR_X0);
-          for(int i=0; i<nx_; ++i){
+          for(int i=0; i<nfx_; ++i){
             v.at(offs++) = x.at(i);
           }
 
@@ -455,11 +455,11 @@ namespace CasADi{
           if(j>0){
             if (has_startup_integrator && startup_integrator_.hasOption("init_z")) {
               std::vector<double> init_z = startup_integrator_.getOption("init_z");
-              for(int i=0; i<nz_; ++i){
+              for(int i=0; i<nfz_; ++i){
                 v.at(offs++) = init_z.at(i);
               }
             } else {
-              offs += nz_;
+              offs += nfz_;
             }
           }
         

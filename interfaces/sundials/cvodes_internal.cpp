@@ -118,8 +118,8 @@ namespace CasADi{
     if(mem_==0) throw CasadiException("CVodeCreate: Creation failed");
 
     // Allocate n-vectors for ivp
-    x0_ = N_VMake_Serial(nx_,input(INTEGRATOR_X0).ptr());
-    x_ = N_VMake_Serial(nx_,output(INTEGRATOR_XF).ptr());
+    x0_ = N_VMake_Serial(nfx_,input(INTEGRATOR_X0).ptr());
+    x_ = N_VMake_Serial(nfx_,output(INTEGRATOR_XF).ptr());
 
     // Disable internal warning messages?
     disable_internal_warnings_ = getOption("disable_internal_warnings");
@@ -162,9 +162,9 @@ namespace CasADi{
     if(flag!=CV_SUCCESS) cvodes_error("CVodeSetUserData",flag);
 
     // Quadrature equations
-    if(nq_>0){
+    if(nfq_>0){
       // Allocate n-vectors for quadratures
-      q_ = N_VMake_Serial(nq_,output(INTEGRATOR_QF).ptr());
+      q_ = N_VMake_Serial(nfq_,output(INTEGRATOR_QF).ptr());
 
       // Initialize quadratures in CVodes
       N_VConst(0.0, q_);
@@ -188,15 +188,15 @@ namespace CasADi{
       xF0_.resize(nfdir_,0);
       xF_.resize(nfdir_,0);
       for(int i=0; i<nfdir_; ++i){
-        xF0_[i] = N_VMake_Serial(nx_,fwdSeed(INTEGRATOR_X0,i).ptr());
-        xF_[i] = N_VMake_Serial(nx_,fwdSens(INTEGRATOR_XF,i).ptr());
+        xF0_[i] = N_VMake_Serial(nfx_,fwdSeed(INTEGRATOR_X0,i).ptr());
+        xF_[i] = N_VMake_Serial(nfx_,fwdSens(INTEGRATOR_XF,i).ptr());
       }
 
       // Allocate n-vectors for quadratures
-      if(nq_>0){
+      if(nfq_>0){
         qF_.resize(nfdir_,0);
         for(int i=0; i<nfdir_; ++i){
-          qF_[i] = N_VMake_Serial(nq_,fwdSens(INTEGRATOR_QF,i).ptr());
+          qF_[i] = N_VMake_Serial(nfq_,fwdSens(INTEGRATOR_QF,i).ptr());
         }
       }
       
@@ -248,7 +248,7 @@ namespace CasADi{
       if(flag != CV_SUCCESS) cvodes_error("CVodeSetSensErrCon",flag);
     
       // Quadrature equations
-      if(nq_>0){
+      if(nfq_>0){
         for(vector<N_Vector>::iterator it=qF_.begin(); it!=qF_.end(); ++it) N_VConst(0.0,*it);
         flag = CVodeQuadSensInit(mem_, rhsQS_wrapper, getPtr(qF_));
         if(flag != CV_SUCCESS) cvodes_error("CVodeQuadSensInit",flag);
@@ -411,7 +411,7 @@ namespace CasADi{
     if(flag!=CV_SUCCESS) cvodes_error("CVodeReInit",flag);
   
     // Re-initialize quadratures
-    if(nq_>0){
+    if(nfq_>0){
       N_VConst(0.0,q_);
       flag = CVodeQuadReInit(mem_, q_);
       if(flag != CV_SUCCESS) cvodes_error("CVodeQuadReInit",flag);
@@ -422,7 +422,7 @@ namespace CasADi{
       flag = CVodeSensReInit(mem_,ism_,getPtr(xF0_));
       if(flag != CV_SUCCESS) cvodes_error("CVodeSensReInit",flag);
     
-      if(nq_>0){
+      if(nfq_>0){
         for(vector<N_Vector>::iterator it=qF_.begin(); it!=qF_.end(); ++it) N_VConst(0.0,*it);
         flag = CVodeQuadSensReInit(mem_, getPtr(qF_));
         if(flag != CV_SUCCESS) cvodes_error("CVodeQuadSensReInit",flag);
@@ -466,7 +466,7 @@ namespace CasADi{
       if(flag!=CV_SUCCESS && flag!=CV_TSTOP_RETURN) cvodes_error("CVode",flag);
     }
   
-    if(nq_>0){
+    if(nfq_>0){
       double tret;
       flag = CVodeGetQuad(mem_, &tret, q_);
       if(flag!=CV_SUCCESS) cvodes_error("CVodeGetQuad",flag);
@@ -477,7 +477,7 @@ namespace CasADi{
       flag = CVodeGetSens(mem_, &t_, getPtr(xF_));
       if(flag != CV_SUCCESS) cvodes_error("CVodeGetSens",flag);
     
-      if(nq_>0){
+      if(nfq_>0){
         double tret;
         flag = CVodeGetQuadSens(mem_, &tret, getPtr(qF_));
         if(flag != CV_SUCCESS) cvodes_error("CVodeGetQuadSens",flag);
@@ -1621,7 +1621,7 @@ namespace CasADi{
   }
 
   void CVodesInternal::initDenseLinearSolver(){
-    int flag = CVDense(mem_, nx_);
+    int flag = CVDense(mem_, nfx_);
     if(flag!=CV_SUCCESS) cvodes_error("CVDense",flag);
     if(exact_jacobian_){ 
       flag = CVDlsSetDenseJacFn(mem_, djac_wrapper);
@@ -1630,7 +1630,7 @@ namespace CasADi{
   }
 
   void CVodesInternal::initBandedLinearSolver(){
-    int flag = CVBand(mem_, nx_, getOption("upper_bandwidth").toInt(), getOption("lower_bandwidth").toInt());
+    int flag = CVBand(mem_, nfx_, getOption("upper_bandwidth").toInt(), getOption("lower_bandwidth").toInt());
     if(flag!=CV_SUCCESS) cvodes_error("CVBand",flag);
     if(exact_jacobian_){
       flag = CVDlsSetBandJacFn(mem_, bjac_wrapper);
@@ -1784,7 +1784,7 @@ namespace CasADi{
     // Get the Jacobian in the Newton iteration
     typename FunctionType::MatType c_x = FunctionType::MatType::sym("c_x");
     typename FunctionType::MatType c_xdot = FunctionType::MatType::sym("c_xdot");
-    typename FunctionType::MatType jac = c_x*f.jac(DAE_X,DAE_ODE) + c_xdot*FunctionType::MatType::eye(nx_);
+    typename FunctionType::MatType jac = c_x*f.jac(DAE_X,DAE_ODE) + c_xdot*FunctionType::MatType::eye(nfx_);
   
     // Jacobian function
     std::vector<typename FunctionType::MatType> jac_in = f.inputExpr();

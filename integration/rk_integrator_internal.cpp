@@ -47,7 +47,7 @@ namespace CasADi{
   void RKIntegratorInternal::init(){
     // Call the base class init
     IntegratorInternal::init();
-    casadi_assert_message(nq_==0, "Quadratures not supported.");
+    casadi_assert_message(nfq_==0, "Quadratures not supported.");
   
     // Number of finite elements
     int nk = getOption("number_of_finite_elements");
@@ -66,10 +66,10 @@ namespace CasADi{
     MX h_mx = h;
     
     // Initial state
-    MX Y0("Y0",nx_);
+    MX Y0("Y0",nfx_);
   
     // Free parameters
-    MX P("P",np_);
+    MX P("P",nfp_);
 
     // Current state
     MX Y = Y0;
