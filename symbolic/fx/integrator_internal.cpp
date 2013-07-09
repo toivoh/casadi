@@ -583,7 +583,7 @@ namespace CasADi{
     ret_in.reserve(INTEGRATOR_NUM_IN*(1+nfwd) + INTEGRATOR_NUM_OUT*nadj);
   
     // Augmented state
-    MX x0_aug, p_aug, rx0_aug, rp_aug;
+    vector<MX> x0_aug, p_aug, rx0_aug, rp_aug;
   
     // Temp stringstream
     stringstream ss;
@@ -600,28 +600,28 @@ namespace CasADi{
       ss << "x0";
       if(dir>=0) ss << "_" << dir;
       dd[INTEGRATOR_X0] = msym(ss.str(),input(INTEGRATOR_X0).sparsity());
-      x0_aug.append(dd[INTEGRATOR_X0]);
+      x0_aug.push_back(dd[INTEGRATOR_X0]);
 
       // Parameter
       ss.clear();
       ss << "p";
       if(dir>=0) ss << "_" << dir;
       dd[INTEGRATOR_P] = msym(ss.str(),input(INTEGRATOR_P).sparsity());
-      p_aug.append(dd[INTEGRATOR_P]);
+      p_aug.push_back(dd[INTEGRATOR_P]);
     
       // Backward state
       ss.clear();
       ss << "rx0";
       if(dir>=0) ss << "_" << dir;
       dd[INTEGRATOR_RX0] = msym(ss.str(),input(INTEGRATOR_RX0).sparsity());
-      rx0_aug.append(dd[INTEGRATOR_RX0]);
+      rx0_aug.push_back(dd[INTEGRATOR_RX0]);
 
       // Backward parameter
       ss.clear();
       ss << "rp";
       if(dir>=0) ss << "_" << dir;
       dd[INTEGRATOR_RP] = msym(ss.str(),input(INTEGRATOR_RP).sparsity());
-      rp_aug.append(dd[INTEGRATOR_RP]);
+      rp_aug.push_back(dd[INTEGRATOR_RP]);
     
       // Add to input vector
       ret_in.insert(ret_in.end(),dd.begin(),dd.end());
@@ -635,25 +635,25 @@ namespace CasADi{
       ss.clear();
       ss << "xf" << "_" << dir;
       dd[INTEGRATOR_XF] = msym(ss.str(),output(INTEGRATOR_XF).sparsity());
-      rx0_aug.append(dd[INTEGRATOR_XF]);
+      rx0_aug.push_back(dd[INTEGRATOR_XF]);
 
       // Quadratures become backward parameters
       ss.clear();
       ss << "qf" << "_" << dir;
       dd[INTEGRATOR_QF] = msym(ss.str(),output(INTEGRATOR_QF).sparsity());
-      rp_aug.append(dd[INTEGRATOR_QF]);
+      rp_aug.push_back(dd[INTEGRATOR_QF]);
 
       // Backward differential states becomes forward differential states
       ss.clear();
       ss << "rxf" << "_" << dir;
       dd[INTEGRATOR_RXF] = msym(ss.str(),output(INTEGRATOR_RXF).sparsity());
-      x0_aug.append(dd[INTEGRATOR_RXF]);
+      x0_aug.push_back(dd[INTEGRATOR_RXF]);
     
       // Backward quadratures becomes (forward) parameters
       ss.clear();
       ss << "rqf" << "_" << dir;
       dd[INTEGRATOR_RQF] = msym(ss.str(),output(INTEGRATOR_RQF).sparsity());
-      p_aug.append(dd[INTEGRATOR_RQF]);
+      p_aug.push_back(dd[INTEGRATOR_RQF]);
     
       // Add to input vector
       ret_in.insert(ret_in.end(),dd.begin(),dd.end());
@@ -661,10 +661,10 @@ namespace CasADi{
   
     // Call the integrator
     vector<MX> integrator_in(INTEGRATOR_NUM_IN);
-    integrator_in[INTEGRATOR_X0] = x0_aug;
-    integrator_in[INTEGRATOR_P] = p_aug;
-    integrator_in[INTEGRATOR_RX0] = rx0_aug;
-    integrator_in[INTEGRATOR_RP] = rp_aug;
+    integrator_in[INTEGRATOR_X0] = vertcat(x0_aug);
+    integrator_in[INTEGRATOR_P] = vertcat(p_aug);
+    integrator_in[INTEGRATOR_RX0] = vertcat(rx0_aug);
+    integrator_in[INTEGRATOR_RP] = vertcat(rp_aug);
     vector<MX> integrator_out = integrator.call(integrator_in);
   
     // Augmented results
