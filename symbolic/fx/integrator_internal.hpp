@@ -94,7 +94,31 @@ public:
   /// Generate a augmented DAE system with nfwd forward sensitivities and nadj adjoint sensitivities (generic)
   template<class Mat,class XFunc>
   std::pair<FX,FX> getAugmentedGen(int nfwd, int nadj);
+
+  /// DAE
+  FX dae_;
+
+  /// Dimensions
+  int nx_, nz_, nq_, np_;
   
+  /// Number of derivatives to be calculated
+  int nfwd_, nadj_;
+
+  /// Integration horizon
+  double t0_, tf_;
+
+  /// Number of sensitivities to be propagated along with the integration forward in time
+  int nsens_;
+  
+  /// Number of sensitivities to be propagated along with the integration backward in time
+  int nsensB_;
+  
+  /// Number of sensitivities to be propagated along with the integration backward in time  that depend on sensitivities propagated along with the integration forward in time
+  int nsensB_store_;
+
+  
+  // TO BE REMOVED:
+
   /// Number of states for the forward integration
   int nfx_, nfz_, nfq_;
   
@@ -104,30 +128,12 @@ public:
   /// Number of forward and backward parameters
   int nfp_, nrp_;
 
-  /// Integration horizon
-  double t0_, tf_;
-
-  /// DAE
-  FX dae_;
-  
-  /// Number of derivatives to be calculated
-  int nfwd_, nadj_;
-
   /// ODE/DAE forward integration function
   FX f_;
   
   /// ODE/DAE backward integration function, if any
   FX g_;
-  
-  /// Number of sensitivities to be propagated along with the integration forward in time
-  int nsens_;
-  
-  /// Number of sensitivities to be propagated along with the integration backward in time
-  int nsensB_;
-  
-  /// Number of sensitivities to be propagated along with the integration backward in time  that depend on sensitivities propagated along with the integration forward in time
-  int nsensB_store_;
-  
+    
   /// Generate new functions for calculating forward/adjoint directional derivatives
   bool fwd_via_sct_, adj_via_sct_;
   

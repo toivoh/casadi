@@ -162,7 +162,19 @@ namespace CasADi{
   }
 
   void IntegratorInternal::init(){
+
+    // Initialize the dae function and check signature
+    casadi_assert(!dae_.isNull());
+    dae_.init(false);
+    casadi_assert_message(dae_.getNumInputs()==DAE_NUM_IN,"Wrong number of inputs for the DAE callback function");
+    casadi_assert_message(dae_.getNumOutputs()==DAE_NUM_OUT,"Wrong number of outputs for the DAE callback function");
   
+    // Get dimensions
+    nx_ = dae_.input(DAE_X).size();
+    nz_ = dae_.input(DAE_Z).size();
+    np_ = dae_.input(DAE_P).size();
+    nq_ = dae_.output(DAE_QUAD).size();
+    
     // Initialize the functions
     casadi_assert(!f_.isNull());
   
@@ -197,6 +209,8 @@ namespace CasADi{
       casadi_assert_message(g_.output(RDAE_ODE).numel()==nrx_,"Inconsistent dimensions. Expecting RDAE_ODE output of size " << nrx_ << ", but got " << g_.output(RDAE_ODE).numel() << " instead.");
       casadi_assert_message(g_.output(RDAE_ALG).numel()==nrz_,"Inconsistent dimensions. Expecting RDAE_ALG input of size " << nrz_ << ", but got " << g_.output(RDAE_ALG).numel() << " instead.");
     }
+    casadi_assert(nfx_ == (1+nfwd_)*nx_);
+    casadi_assert(nrx_ == nadj_*nx_);
   
     // Allocate space for inputs
     input_.resize(INTEGRATOR_NUM_IN);
@@ -214,14 +228,6 @@ namespace CasADi{
     if(!g_.isNull()){
       output(INTEGRATOR_RXF)  = DMatrix(g_.output(RDAE_ODE).sparsity(),0);
       output(INTEGRATOR_RQF)  = DMatrix(g_.output(RDAE_QUAD).sparsity(),0);
-    }
-
-    {
-      // consistency check
-      dae_.init(false);
-      int nx_orig = dae_.input(DAE_X).size();
-      casadi_assert(nfx_ == (1+nfwd_)*nx_orig);
-      casadi_assert(nrx_ == nadj_*nx_orig);
     }
   
     // Call the base class method
