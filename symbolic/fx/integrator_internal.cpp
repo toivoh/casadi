@@ -590,7 +590,7 @@ namespace CasADi{
     
     // Inputs or forward/adjoint seeds in one direction
     vector<MX> dd;
-  
+
     // Add nondifferentiated inputs and forward seeds
     dd.resize(INTEGRATOR_NUM_IN);
     for(int dir=-1; dir<nfwd; ++dir){
@@ -658,7 +658,7 @@ namespace CasADi{
       // Add to input vector
       ret_in.insert(ret_in.end(),dd.begin(),dd.end());
     }
-  
+
     // Call the integrator
     vector<MX> integrator_in(INTEGRATOR_NUM_IN);
     integrator_in[INTEGRATOR_X0] = vertcat(x0_aug);
@@ -667,44 +667,74 @@ namespace CasADi{
     integrator_in[INTEGRATOR_RP] = vertcat(rp_aug);
     vector<MX> integrator_out = integrator.call(integrator_in);
   
-    // Augmented results
-    MX xf_aug = integrator_out[INTEGRATOR_XF];
-    MX rxf_aug = integrator_out[INTEGRATOR_RXF];
-    MX qf_aug = integrator_out[INTEGRATOR_QF];
-    MX rqf_aug = integrator_out[INTEGRATOR_RQF];
-  
     // Offset in each of the above vectors
-    int xf_offset = 0, rxf_offset = 0, qf_offset = 0, rqf_offset = 0;
+    vector<int> xf_offset(1,0), rxf_offset(1,0), qf_offset(1,0), rqf_offset(1,0);
+    for(int dir=-1; dir<nfwd; ++dir){
+      xf_offset.push_back(xf_offset.back()+nfx_);
+      qf_offset.push_back(qf_offset.back()+nfq_);
+      rxf_offset.push_back(rxf_offset.back()+nrx_);
+      rqf_offset.push_back(rqf_offset.back()+nrq_);
+    }
+    for(int dir=0; dir<nadj; ++dir){
+      rxf_offset.push_back(rxf_offset.back()+nfx_);
+      rqf_offset.push_back(rqf_offset.back()+nfp_);
+      xf_offset.push_back(xf_offset.back()+nrx_);
+      qf_offset.push_back(qf_offset.back()+nrp_);
+    }
+  
+    // Augmented results
+    vector<MX> xf_aug, rxf_aug, qf_aug, rqf_aug;
+    if(integrator_out[INTEGRATOR_XF].isNull()){
+      xf_aug.resize(xf_offset.size()-1);
+    } else {
+      xf_aug = vertsplit(integrator_out[INTEGRATOR_XF],xf_offset);
+    }
+    if(integrator_out[INTEGRATOR_RXF].isNull()){
+      rxf_aug.resize(rxf_offset.size()-1);
+    } else {
+      rxf_aug = vertsplit(integrator_out[INTEGRATOR_RXF],rxf_offset);
+    }
+    if(integrator_out[INTEGRATOR_QF].isNull()){
+      qf_aug.resize(qf_offset.size()-1);
+    } else {
+      qf_aug = vertsplit(integrator_out[INTEGRATOR_QF],qf_offset);
+    }
+    if(integrator_out[INTEGRATOR_RQF].isNull()){
+      rqf_aug.resize(rqf_offset.size()-1);
+    } else {
+      rqf_aug = vertsplit(integrator_out[INTEGRATOR_RQF],rqf_offset);
+    }
   
     // All outputs of the return function
+    vector<MX>::const_iterator xf_aug_it = xf_aug.begin();
+    vector<MX>::const_iterator rxf_aug_it = rxf_aug.begin();
+    vector<MX>::const_iterator qf_aug_it = qf_aug.begin();
+    vector<MX>::const_iterator rqf_aug_it = rqf_aug.begin();
+  
     vector<MX> ret_out;
     ret_out.reserve(INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
   
     // Collect the nondifferentiated results and forward sensitivities
-    dd.resize(INTEGRATOR_NUM_OUT);
-    fill(dd.begin(),dd.end(),MX());
     for(int dir=-1; dir<nfwd; ++dir){
-      if( nfx_>0){ dd[INTEGRATOR_XF]  =  xf_aug[Slice(  xf_offset, xf_offset +  nfx_)];  xf_offset +=  nfx_;}
-      if( nfq_>0){ dd[INTEGRATOR_QF]  =  qf_aug[Slice(  qf_offset, qf_offset +  nfq_)];  qf_offset +=  nfq_; }
-      if(nrx_>0){ dd[INTEGRATOR_RXF] = rxf_aug[Slice( rxf_offset,rxf_offset + nrx_)]; rxf_offset += nrx_; }
-      if(nrq_>0){ dd[INTEGRATOR_RQF] = rqf_aug[Slice( rqf_offset,rqf_offset + nrq_)]; rqf_offset += nrq_; }
-      ret_out.insert(ret_out.end(),dd.begin(),dd.end());
+      ret_out.push_back(*xf_aug_it++);
+      ret_out.push_back(*qf_aug_it++);
+      ret_out.push_back(*rxf_aug_it++);
+      ret_out.push_back(*rqf_aug_it++);
     }
   
     // Collect the adjoint sensitivities
-    dd.resize(INTEGRATOR_NUM_IN);
-    fill(dd.begin(),dd.end(),MX());
     for(int dir=0; dir<nadj; ++dir){
-      if(  nfx_>0){ dd[INTEGRATOR_X0]  = rxf_aug[Slice(rxf_offset, rxf_offset + nfx_ )]; rxf_offset += nfx_;  }
-      if(  nfp_>0){ dd[INTEGRATOR_P]   = rqf_aug[Slice(rqf_offset, rqf_offset + nfp_ )]; rqf_offset += nfp_;  }
-      if( nrx_>0){ dd[INTEGRATOR_RX0] =  xf_aug[Slice(xf_offset,   xf_offset + nrx_)];  xf_offset += nrx_; }
-      if( nrp_>0){ dd[INTEGRATOR_RP]  =  qf_aug[Slice(qf_offset,   qf_offset + nrp_)];  qf_offset += nrp_; }
-      ret_out.insert(ret_out.end(),dd.begin(),dd.end());
+      ret_out.push_back(*rxf_aug_it++);
+      ret_out.push_back(*rqf_aug_it++);
+      ret_out.push_back(*xf_aug_it++);
+      ret_out.push_back(*qf_aug_it++);
     }
+  
     log("IntegratorInternal::getDerivative","end");
   
     // Create derivative function and return
     return MXFunction(ret_in,ret_out);
+  
   }
 
   FX IntegratorInternal::getJacobian(int iind, int oind, bool compact, bool symmetric){
