@@ -32,7 +32,7 @@ namespace CasADi{
 
   CVodesInternal* CVodesInternal::clone() const{
     // Return a deep copy
-    CVodesInternal* node = new CVodesInternal(dae_,0,0);
+    CVodesInternal* node = new CVodesInternal(dae_,nfwd_,nadj_);
     node->setF(f_);
     node->setG(g_);
     node->setOption(dictionary());

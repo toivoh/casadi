@@ -32,7 +32,7 @@ namespace CasADi{
 
   IdasInternal* IdasInternal::clone() const{
     // Return a deep copy
-    IdasInternal* node = new IdasInternal(dae_,0,0);
+    IdasInternal* node = new IdasInternal(dae_,nfwd_,nadj_);
     node->setF(f_);
     node->setG(g_);
     node->setOption(dictionary());

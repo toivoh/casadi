@@ -215,6 +215,14 @@ namespace CasADi{
       output(INTEGRATOR_RXF)  = DMatrix(g_.output(RDAE_ODE).sparsity(),0);
       output(INTEGRATOR_RQF)  = DMatrix(g_.output(RDAE_QUAD).sparsity(),0);
     }
+
+    {
+      // consistency check
+      dae_.init(false);
+      int nx_orig = dae_.input(DAE_X).size();
+      casadi_assert(nx_ == (1+nfwd_)*nx_orig);
+      casadi_assert(nrx_ == nadj_*nx_orig);
+    }
   
     // Call the base class method
     FXInternal::init();
@@ -550,7 +558,7 @@ namespace CasADi{
   
     // Create integrator for augmented DAE
     Integrator integrator;
-    integrator.assignNode(create(dae_,(1+nfwd_)*(1+nfwd) + nadj_*nadj,(1+nfwd_)*nadj) + nadj_*(1+nfwd_));
+    integrator.assignNode(create(dae_,(1+nfwd_)*(1+nfwd) + nadj_*nadj - 1, (1+nfwd_)*nadj + nadj_*(1+nfwd)));
     integrator->setF(aug_dae.first);
     integrator->setG(aug_dae.second);
   
