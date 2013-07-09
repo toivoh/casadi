@@ -47,7 +47,7 @@ if coll:
   integrator.setOption("implicit_solver",KinsolSolver)
   integrator.setOption("implicit_solver_options",\
     {'linear_solver' : CSparse})
-  integrator.setOption("expand_f",True)
+  integrator.setOption("expand",True)
 else:
   integrator = CVodesIntegrator(dae)
   integrator.setOption("abstol",1e-8) # tolerance

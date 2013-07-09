@@ -34,8 +34,7 @@ namespace CasADi{
   RKIntegratorInternal::RKIntegratorInternal(const FX& dae, int nfwd, int nadj) : IntegratorInternal(dae,nfwd,nadj){
     addOption("number_of_finite_elements",     OT_INTEGER,  20, "Number of finite elements");
     addOption("interpolation_order",           OT_INTEGER,  4,  "Order of the interpolating polynomials");
-    addOption("expand_f",                      OT_BOOLEAN,  false, "Expand the ODE/DAE residual function in an SX graph");
-    addOption("expand_q",                      OT_BOOLEAN,  false, "Expand the quadrature function in an SX graph");
+    addOption("expand",                        OT_BOOLEAN,  false, "Expand the ODE/DAE residual function in an SX graph");
   }
 
   void RKIntegratorInternal::deepCopyMembers(std::map<SharedObjectNode*,SharedObject>& already_copied){
@@ -56,8 +55,8 @@ namespace CasADi{
     int deg = getOption("interpolation_order");
     casadi_assert_message(deg==1, "Not implemented");
 
-    // Expand f?
-    bool expand_f = getOption("expand_f");
+    // Expand?
+    bool expand = getOption("expand");
 
     // Size of the finite elements
     double h = (tf_-t0_)/nk;
@@ -99,7 +98,7 @@ namespace CasADi{
     MXFunction yf_fun(yf_in,Y);
   
     // Should the function be expanded in elementary operations?
-    if(expand_f){
+    if(expand){
       yf_fun.init();
       yf_fun_ = SXFunction(yf_fun);
     } else {

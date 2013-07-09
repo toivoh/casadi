@@ -154,7 +154,7 @@ int main(){
           I = CollocationIntegrator(ffcn);
           
           // Set collocation integrator specific options
-          I.setOption("expand_f",true);
+          I.setOption("expand",true);
           I.setOption("implicit_solver",KinsolSolver::creator);
           Dictionary kinsol_options;
           kinsol_options["linear_solver"] = CSparse::creator;

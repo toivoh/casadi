@@ -37,8 +37,7 @@ namespace CasADi{
     addOption("collocation_scheme",            OT_STRING,  "radau",  "Collocation scheme","radau|legendre");
     addOption("implicit_solver",               OT_IMPLICITFUNCTION,  GenericType(), "An implicit function solver");
     addOption("implicit_solver_options",       OT_DICTIONARY, GenericType(), "Options to be passed to the NLP Solver");
-    addOption("expand_f",                      OT_BOOLEAN,  false, "Expand the ODE/DAE residual function in an SX graph");
-    addOption("expand_q",                      OT_BOOLEAN,  false, "Expand the quadrature function in an SX graph");
+    addOption("expand",                        OT_BOOLEAN,  false, "Expand the ODE/DAE residual function in an SX graph");
     addOption("hotstart",                      OT_BOOLEAN,  true, "Initialize the trajectory at the previous solution");
     addOption("quadrature_solver",             OT_LINEARSOLVER,  GenericType(), "An linear solver to solver the quadrature equations");
     addOption("quadrature_solver_options",     OT_DICTIONARY, GenericType(), "Options to be passed to the quadrature solver");
@@ -63,7 +62,7 @@ namespace CasADi{
     IntegratorInternal::init();
   
     // Read options
-    bool expand_f = getOption("expand_f");
+    bool expand = getOption("expand");
   
     // Hotstart?
     hotstart_ = getOption("hotstart");
@@ -327,7 +326,7 @@ namespace CasADi{
     ifcn_in[1+INTEGRATOR_RP] = RP;
     FX ifcn = MXFunction(ifcn_in,gv);
     ifcn.init(); 
-    if(expand_f){
+    if(expand){
       ifcn = SXFunction(shared_cast<MXFunction>(ifcn));
       ifcn.init();
     }
@@ -341,7 +340,7 @@ namespace CasADi{
     afcn_out[1+INTEGRATOR_RQF] = RQF;
     FX afcn = MXFunction(ifcn_in,afcn_out);
     afcn.init();
-    if(expand_f){
+    if(expand){
       afcn = SXFunction(shared_cast<MXFunction>(afcn));
       afcn.init();
     }

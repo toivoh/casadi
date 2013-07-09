@@ -110,7 +110,7 @@ int main(){
   } else {
     // An explicit Euler integrator
     integrator = RKIntegrator(daefcn);
-    integrator.setOption("expand_f",true);
+    integrator.setOption("expand",true);
     integrator.setOption("interpolation_order",1);
     integrator.setOption("number_of_finite_elements",1000);
   }

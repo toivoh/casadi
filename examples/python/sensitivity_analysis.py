@@ -117,7 +117,7 @@ for Integrators in (ODE_integrators,DAE_integrators):
     if MyIntegrator==CollocationIntegrator:
       I.setOption("implicit_solver",KinsolSolver)
       I.setOption("implicit_solver_options",{"linear_solver":CSparse})
-      I.setOption("expand_f",True)
+      I.setOption("expand",True)
     I.init()
 
     # Integrate to get results
