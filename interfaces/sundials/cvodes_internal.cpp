@@ -190,14 +190,14 @@ namespace CasADi{
       xF_.resize(nfdir_,0);
       for(int i=0; i<nfdir_; ++i){
         xF0_[i] = N_VMake_Serial(nfx_,fwdSeed(INTEGRATOR_X0,i).ptr());
-        xF_[i] = N_VMake_Serial(nfx_,fwdSens(INTEGRATOR_XF,i).ptr());
+        xF_[i] = N_VNew_Serial(nfx_);
       }
 
       // Allocate n-vectors for quadratures
       if(nfq_>0){
         qF_.resize(nfdir_,0);
         for(int i=0; i<nfdir_; ++i){
-          qF_[i] = N_VMake_Serial(nfq_,fwdSens(INTEGRATOR_QF,i).ptr());
+          qF_[i] = N_VNew_Serial(nfq_);
         }
       }
       
@@ -523,10 +523,59 @@ namespace CasADi{
       flag = CVodeGetSens(mem_, &t_, getPtr(xF_));
       if(flag != CV_SUCCESS) cvodes_error("CVodeGetSens",flag);
     
+      for(int d=0; d<nsens_; ++d){
+        double* x = NV_DATA_S(xF_[d]);
+        if(new_signature_){
+          casadi_assert(NV_LENGTH_S(xF_[d]) == nx_ * (1+nfwd_) );
+
+          // Nondifferentiated output
+          fwdSens(NEW_INTEGRATOR_XF,d).set(x);
+          x += nx_;
+
+          // Forward sensitivities
+          for(int d=0; d<nfwd_; ++d){
+            fwdSens(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_XF,d).set(x);
+            x += nx_;
+          }
+
+          // Adjoint sensitivities
+          // ..
+
+        } else {
+          fwdSens(INTEGRATOR_XF,d).set(x);
+        }
+      }
+
+
       if(nfq_>0){
         double tret;
         flag = CVodeGetQuadSens(mem_, &tret, getPtr(qF_));
         if(flag != CV_SUCCESS) cvodes_error("CVodeGetQuadSens",flag);
+
+        for(int d=0; d<nsens_; ++d){
+          
+          double* q = NV_DATA_S(qF_[d]);
+          if(new_signature_){
+
+            casadi_assert(NV_LENGTH_S(qF_[d]) == nq_ * (1+nfwd_) );
+
+            // Nondifferentiated output
+            fwdSens(NEW_INTEGRATOR_QF,d).set(q);
+            q += nq_;
+
+            // Forward sensitivities
+            for(int d=0; d<nfwd_; ++d){
+              fwdSens(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_QF,d).set(q);
+              q += nq_;
+            }
+
+            // Adjoint sensitivities
+            // ..
+
+          } else {
+            fwdSens(INTEGRATOR_QF,d).set(q);
+          }
+        }
       }
     }
 
