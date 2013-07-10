@@ -379,6 +379,7 @@ namespace CasADi{
       startup_integrator_ = startup_integrator_creator(dae_,nfwd_,nadj_);
       startup_integrator_->setF(f_);
       startup_integrator_->setG(g_);
+      startup_integrator_->new_signature_ = new_signature_;
     
       // Pass options
       startup_integrator_.setOption("number_of_fwd_dir",0); // not needed

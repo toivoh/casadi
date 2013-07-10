@@ -35,6 +35,7 @@ namespace CasADi{
     CVodesInternal* node = new CVodesInternal(dae_,nfwd_,nadj_);
     node->setF(f_);
     node->setG(g_);
+    node->new_signature_ = new_signature_;
     node->setOption(dictionary());
     node->jac_ = jac_;
     node->linsol_ = linsol_;
@@ -119,7 +120,7 @@ namespace CasADi{
 
     // Allocate n-vectors for ivp
     x0_ = N_VMake_Serial(nfx_,input(INTEGRATOR_X0).ptr());
-    x_ = N_VMake_Serial(nfx_,output(INTEGRATOR_XF).ptr());
+    x_ = N_VNew_Serial(nfx_);
 
     // Disable internal warning messages?
     disable_internal_warnings_ = getOption("disable_internal_warnings");
@@ -164,7 +165,7 @@ namespace CasADi{
     // Quadrature equations
     if(nfq_>0){
       // Allocate n-vectors for quadratures
-      q_ = N_VMake_Serial(nfq_,output(INTEGRATOR_QF).ptr());
+      q_ = N_VNew_Serial(nfq_);
 
       // Initialize quadratures in CVodes
       N_VConst(0.0, q_);
@@ -268,9 +269,8 @@ namespace CasADi{
       //       rq_ = N_VNew_Serial((1+nfdir_)*nrq_);
       //     } else {
       rx0_ = N_VMake_Serial(nrx_,input(INTEGRATOR_RX0).ptr());
-      rx_ = N_VMake_Serial(nrx_,output(INTEGRATOR_RXF).ptr());
-      rq_ = N_VMake_Serial(nrq_,output(INTEGRATOR_RQF).ptr());
-      //     }
+      rx_ = N_VNew_Serial(nrx_);
+      rq_ = N_VNew_Serial(nrq_);
     
       // Get the number of steos per checkpoint
       int Nd = getOption("steps_per_checkpoint");
@@ -465,11 +465,57 @@ namespace CasADi{
       flag = CVode(mem_, t_out, x_, &t_, CV_NORMAL);
       if(flag!=CV_SUCCESS && flag!=CV_TSTOP_RETURN) cvodes_error("CVode",flag);
     }
+
+    if(new_signature_){
+      double* x = NV_DATA_S(x_);
+      casadi_assert(NV_LENGTH_S(x_) == nx_ * (1+nfwd_) );
+
+      // Nondifferentiated output
+      output(NEW_INTEGRATOR_XF).set(x);
+      x += nx_;
+
+      // Forward sensitivities
+      for(int d=0; d<nfwd_; ++d){
+        output(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_XF).set(x);
+        x += nx_;
+      }
+
+      // Adjoint sensitivities
+      // ..
+
+    } else {
+      output(INTEGRATOR_XF).set(NV_DATA_S(x_));
+    }
+
   
     if(nfq_>0){
       double tret;
       flag = CVodeGetQuad(mem_, &tret, q_);
       if(flag!=CV_SUCCESS) cvodes_error("CVodeGetQuad",flag);
+
+
+      if(new_signature_){
+
+        double* q = NV_DATA_S(q_);
+        casadi_assert(NV_LENGTH_S(q_) == nq_ * (1+nfwd_) );
+
+        // Nondifferentiated output
+        output(NEW_INTEGRATOR_QF).set(q);
+        q += nq_;
+
+        // Forward sensitivities
+        for(int d=0; d<nfwd_; ++d){
+          output(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_QF).set(q);
+          q += nq_;
+        }
+
+        // Adjoint sensitivities
+        // ..
+
+      } else {
+        output(INTEGRATOR_QF).set(NV_DATA_S(q_));
+      }
+
     }
   
     if(nsens_>0){
@@ -540,7 +586,13 @@ namespace CasADi{
 
     flag = CVodeGetQuadB(mem_, whichB_, &tret, rq_);
     if(flag!=CV_SUCCESS) cvodes_error("CVodeGetQuadB",flag);
-  
+
+    if(new_signature_){
+      casadi_error("not yet");
+    } else {
+      output(INTEGRATOR_RXF).set(NV_DATA_S(rx_));
+      output(INTEGRATOR_RQF).set(NV_DATA_S(rq_));
+    }
   
     if (gather_stats_) {
       long nsteps, nfevals, nlinsetups, netfails;

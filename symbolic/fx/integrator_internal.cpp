@@ -53,6 +53,7 @@ namespace CasADi{
     inputScheme_ = SCHEME_IntegratorInput;
     outputScheme_ = SCHEME_IntegratorOutput;
 
+    new_signature_ = false;
     f_ = dae_;
   }
 
@@ -229,6 +230,24 @@ namespace CasADi{
       output(INTEGRATOR_RXF)  = DMatrix(g_.output(RDAE_ODE).sparsity(),0);
       output(INTEGRATOR_RQF)  = DMatrix(g_.output(RDAE_QUAD).sparsity(),0);
     }
+
+    if(new_signature_){
+      output_.resize( NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*nadj_);
+      
+      int ind=0;
+      for(int d=-1; d<nfwd_; ++d){
+        output(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
+        output(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
+      }
+      for(int d=0; d<nadj_; ++d){
+        output(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
+        output(ind++) = DMatrix(dae_.input(DAE_P).sparsity(),0);
+      }
+      casadi_assert(ind == getNumOutputs());
+    }
+
+
+
   
     // Call the base class method
     FXInternal::init();
@@ -567,6 +586,7 @@ namespace CasADi{
     integrator.assignNode(create(dae_,(1+nfwd_)*(1+nfwd) + nadj_*nadj - 1, (1+nfwd_)*nadj + nadj_*(1+nfwd)));
     integrator->setF(aug_dae.first);
     integrator->setG(aug_dae.second);
+    //    integrator->new_signature_ = true;
   
     // Copy options
     integrator.setOption(dictionary());
@@ -681,59 +701,69 @@ namespace CasADi{
       xf_offset.push_back(xf_offset.back()+nrx_);
       qf_offset.push_back(qf_offset.back()+nrp_);
     }
-  
-    // Augmented results
-    vector<MX> xf_aug, rxf_aug, qf_aug, rqf_aug;
-    if(integrator_out[INTEGRATOR_XF].isNull()){
-      xf_aug.resize(xf_offset.size()-1);
+
+    if(integrator->new_signature_){
+      
+      log("IntegratorInternal::getDerivative","end");
+
+      // Create derivative function and return
+      return MXFunction(ret_in,integrator_out);
+      
     } else {
-      xf_aug = vertsplit(integrator_out[INTEGRATOR_XF],xf_offset);
-    }
-    if(integrator_out[INTEGRATOR_RXF].isNull()){
-      rxf_aug.resize(rxf_offset.size()-1);
-    } else {
-      rxf_aug = vertsplit(integrator_out[INTEGRATOR_RXF],rxf_offset);
-    }
-    if(integrator_out[INTEGRATOR_QF].isNull()){
-      qf_aug.resize(qf_offset.size()-1);
-    } else {
-      qf_aug = vertsplit(integrator_out[INTEGRATOR_QF],qf_offset);
-    }
-    if(integrator_out[INTEGRATOR_RQF].isNull()){
-      rqf_aug.resize(rqf_offset.size()-1);
-    } else {
-      rqf_aug = vertsplit(integrator_out[INTEGRATOR_RQF],rqf_offset);
-    }
+
+      // Augmented results
+      vector<MX> xf_aug, rxf_aug, qf_aug, rqf_aug;
+      if(integrator_out[INTEGRATOR_XF].isNull()){
+        xf_aug.resize(xf_offset.size()-1);
+      } else {
+        xf_aug = vertsplit(integrator_out[INTEGRATOR_XF],xf_offset);
+      }
+      if(integrator_out[INTEGRATOR_RXF].isNull()){
+        rxf_aug.resize(rxf_offset.size()-1);
+      } else {
+        rxf_aug = vertsplit(integrator_out[INTEGRATOR_RXF],rxf_offset);
+      }
+      if(integrator_out[INTEGRATOR_QF].isNull()){
+        qf_aug.resize(qf_offset.size()-1);
+      } else {
+        qf_aug = vertsplit(integrator_out[INTEGRATOR_QF],qf_offset);
+      }
+      if(integrator_out[INTEGRATOR_RQF].isNull()){
+        rqf_aug.resize(rqf_offset.size()-1);
+      } else {
+        rqf_aug = vertsplit(integrator_out[INTEGRATOR_RQF],rqf_offset);
+      }
   
-    // All outputs of the return function
-    vector<MX>::const_iterator xf_aug_it = xf_aug.begin();
-    vector<MX>::const_iterator rxf_aug_it = rxf_aug.begin();
-    vector<MX>::const_iterator qf_aug_it = qf_aug.begin();
-    vector<MX>::const_iterator rqf_aug_it = rqf_aug.begin();
+      // All outputs of the return function
+      vector<MX>::const_iterator xf_aug_it = xf_aug.begin();
+      vector<MX>::const_iterator rxf_aug_it = rxf_aug.begin();
+      vector<MX>::const_iterator qf_aug_it = qf_aug.begin();
+      vector<MX>::const_iterator rqf_aug_it = rqf_aug.begin();
   
-    vector<MX> ret_out;
-    ret_out.reserve(INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
+      vector<MX> ret_out;
+      ret_out.reserve(INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
   
-    // Collect the nondifferentiated results and forward sensitivities
-    for(int dir=-1; dir<nfwd; ++dir){
-      ret_out.push_back(*xf_aug_it++);
-      ret_out.push_back(*qf_aug_it++);
-      ret_out.push_back(*rxf_aug_it++);
-      ret_out.push_back(*rqf_aug_it++);
+      // Collect the nondifferentiated results and forward sensitivities
+      for(int dir=-1; dir<nfwd; ++dir){
+        ret_out.push_back(*xf_aug_it++);
+        ret_out.push_back(*qf_aug_it++);
+        ret_out.push_back(*rxf_aug_it++);
+        ret_out.push_back(*rqf_aug_it++);
+      }
+  
+      // Collect the adjoint sensitivities
+      for(int dir=0; dir<nadj; ++dir){
+        ret_out.push_back(*rxf_aug_it++);
+        ret_out.push_back(*rqf_aug_it++);
+        ret_out.push_back(*xf_aug_it++);
+        ret_out.push_back(*qf_aug_it++);
+      }
+  
+      log("IntegratorInternal::getDerivative","end (old)");
+
+      // Create derivative function and return
+      return MXFunction(ret_in,ret_out);
     }
-  
-    // Collect the adjoint sensitivities
-    for(int dir=0; dir<nadj; ++dir){
-      ret_out.push_back(*rxf_aug_it++);
-      ret_out.push_back(*rqf_aug_it++);
-      ret_out.push_back(*xf_aug_it++);
-      ret_out.push_back(*qf_aug_it++);
-    }
-  
-    log("IntegratorInternal::getDerivative","end");
-  
-    // Create derivative function and return
-    return MXFunction(ret_in,ret_out);
   
   }
 

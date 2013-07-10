@@ -54,6 +54,7 @@ public:
   /** \brief Set equations -- to be deleted */
   void setF(const FX& f){ f_ = f;}
   void setG(const FX& g){ g_ = g;}
+  bool new_signature_;
 
   /** \brief  Print solver statistics */
   virtual void printStats(std::ostream &stream) const{}

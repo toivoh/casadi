@@ -35,6 +35,7 @@ namespace CasADi{
     IdasInternal* node = new IdasInternal(dae_,nfwd_,nadj_);
     node->setF(f_);
     node->setG(g_);
+    node->new_signature_ = new_signature_;
     node->setOption(dictionary());
     node->jac_ = jac_;
     node->linsol_ = linsol_;

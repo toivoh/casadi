@@ -34,7 +34,7 @@ OUTPUTSCHEME(IntegratorOutput)
 using namespace std;
 namespace CasADi{
   
-  SundialsInternal::SundialsInternal(const FX& f, int nfwd, int nadj) : IntegratorInternal(f, nfwd, nadj){
+  SundialsInternal::SundialsInternal(const FX& dae, int nfwd, int nadj) : IntegratorInternal(dae, nfwd, nadj){
     addOption("max_num_steps",               OT_INTEGER,          10000,          "Maximum number of integrator steps");
     addOption("reltol",                      OT_REAL,             1e-6,           "Relative tolerence for the IVP solution");
     addOption("abstol",                      OT_REAL,             1e-8,           "Absolute tolerence  for the IVP solution");

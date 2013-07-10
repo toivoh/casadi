@@ -59,7 +59,7 @@ namespace CasADi{
     addOption("monitor",      OT_STRINGVECTOR, GenericType(),  "Monitors to be activated","inputs|outputs");
     addOption("regularity_check",         OT_BOOLEAN,             true,          "Throw exceptions when NaN or Inf appears during evaluation");
     addOption("inputs_check",         OT_BOOLEAN,             true,          "Throw exceptions when the numerical values of the inputs don't make sense");
-    addOption("gather_stats",             OT_BOOLEAN,             false,         "Flag to indicate wether statistics must be gathered");
+    addOption("gather_stats",             OT_BOOLEAN,             false,         "Flag to indicate whether statistics must be gathered");
   
     verbose_ = false;
     jacgen_ = 0;
