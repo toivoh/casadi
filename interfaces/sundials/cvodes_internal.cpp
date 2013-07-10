@@ -534,7 +534,7 @@ namespace CasADi{
 
           // Forward sensitivities
           for(int d=0; d<nfwd_; ++d){
-            fwdSens(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_XF,d).set(x);
+            fwdSens(NEW_INTEGRATOR_NUM_OUT*(1+d)+NEW_INTEGRATOR_XF,d).set(x);
             x += nx_;
           }
 
@@ -565,7 +565,7 @@ namespace CasADi{
 
             // Forward sensitivities
             for(int d=0; d<nfwd_; ++d){
-              fwdSens(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_QF,d).set(q);
+              fwdSens(NEW_INTEGRATOR_NUM_OUT*(1+d) + NEW_INTEGRATOR_QF,d).set(q);
               q += nq_;
             }
 
@@ -637,7 +637,20 @@ namespace CasADi{
     if(flag!=CV_SUCCESS) cvodes_error("CVodeGetQuadB",flag);
 
     if(new_signature_){
-      casadi_error("not yet");
+      casadi_assert(NV_LENGTH_S(rx_) == nx_ * nadj_ );
+      casadi_assert(NV_LENGTH_S(rq_) == nq_ * nadj_ );
+      double* rx = NV_DATA_S(rx_);
+      double* rq = NV_DATA_S(rq_);
+
+      // Adjoint sensitivities
+      for(int d=0; d<nadj_; ++d){
+        output(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_X0).set(rx);
+        rx += nx_;
+
+        output(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_P).set(rq);
+        rq += nq_;
+      }
+
     } else {
       output(INTEGRATOR_RXF).set(NV_DATA_S(rx_));
       output(INTEGRATOR_RQF).set(NV_DATA_S(rq_));

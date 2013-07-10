@@ -706,8 +706,36 @@ namespace CasADi{
       
       log("IntegratorInternal::getDerivative","end");
 
-      // Create derivative function and return
-      return MXFunction(ret_in,integrator_out);
+      if(new_signature_){
+        casadi_assert(integrator_out.size() == INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
+
+        // Create derivative function and return
+        return MXFunction(ret_in,integrator_out);
+      } else {
+        vector<MX>::const_iterator it = integrator_out.begin();
+        vector<MX> ret_out;
+        ret_out.reserve(INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
+  
+        // Collect the nondifferentiated results and forward sensitivities
+        for(int dir=-1; dir<nfwd; ++dir){
+          ret_out.push_back(*it++);
+          ret_out.push_back(*it++);
+          ret_out.push_back(MX());
+          ret_out.push_back(MX());
+        }
+  
+        // Collect the adjoint sensitivities
+        for(int dir=0; dir<nadj; ++dir){
+          ret_out.push_back(*it++);
+          ret_out.push_back(*it++);
+          ret_out.push_back(MX());
+          ret_out.push_back(MX());
+        }
+        casadi_assert(it==integrator_out.end());
+        casadi_assert(ret_out.size() == INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
+        return MXFunction(ret_in,ret_out);
+        
+      }
       
     } else {
 
