@@ -62,6 +62,7 @@ namespace CasADi{
 
   void IntegratorInternal::evaluate(int nfdir, int nadir){
     casadi_assert_message(adj_via_sct_,"Not implemented."); // NOTE: Currently not supported by any derived class
+
   
     // What needs to be calculated
     bool need_nondiff = true;
@@ -113,22 +114,25 @@ namespace CasADi{
     // Get derivative function
     FX dfcn = derivative(nfdir, nadir);
 
+    int integ_in = new_signature_ ? NEW_INTEGRATOR_NUM_IN : INTEGRATOR_NUM_IN;
+    int integ_out = new_signature_ ? NEW_INTEGRATOR_NUM_OUT : INTEGRATOR_NUM_OUT;
+
     // Pass function values
     int input_index = 0;
-    for(int i=0; i<INTEGRATOR_NUM_IN; ++i){
+    for(int i=0; i<integ_in; ++i){
       dfcn.setInput(input(i),input_index++);
     }
   
     // Pass forward seeds
     for(int dir=0; dir<nfdir; ++dir){
-      for(int i=0; i<INTEGRATOR_NUM_IN; ++i){
+      for(int i=0; i<integ_in; ++i){
         dfcn.setInput(fwdSeed(i,dir),input_index++);
       }
     }
     
     // Pass adjoint seeds
     for(int dir=0; dir<nadir; ++dir){
-      for(int i=0; i<INTEGRATOR_NUM_OUT; ++i){
+      for(int i=0; i<integ_out; ++i){
         dfcn.setInput(adjSeed(i,dir),input_index++);
       }
     }
@@ -138,20 +142,20 @@ namespace CasADi{
   
     // Get nondifferentiated results
     int output_index = 0;
-    for(int i=0; i<INTEGRATOR_NUM_OUT; ++i){
+    for(int i=0; i<integ_out; ++i){
       dfcn.getOutput(output(i),output_index++);
     }
   
     // Get forward sensitivities 
     for(int dir=0; dir<nfdir; ++dir){
-      for(int i=0; i<INTEGRATOR_NUM_OUT; ++i){
+      for(int i=0; i<integ_out; ++i){
         dfcn.getOutput(fwdSens(i,dir),output_index++);
       }
     }
   
     // Get adjoint sensitivities 
     for(int dir=0; dir<nadir; ++dir){
-      for(int i=0; i<INTEGRATOR_NUM_IN; ++i){
+      for(int i=0; i<integ_in; ++i){
         dfcn.getOutput(adjSens(i,dir),output_index++);
       }
     }
@@ -232,9 +236,23 @@ namespace CasADi{
     }
 
     if(new_signature_){
-      output_.resize( NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*nadj_);
-      
+
+      // Inputs
+      setNumInputs(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*nadj_);
       int ind=0;
+      for(int d=-1; d<nfwd_; ++d){
+        input(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
+        input(ind++) = DMatrix(dae_.input(DAE_P).sparsity(),0);
+      }
+      for(int d=0; d<nadj_; ++d){
+        input(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
+        input(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
+      }
+      casadi_assert(ind == getNumInputs());
+
+      // Outputs
+      setNumOutputs(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*nadj_);
+      ind=0;
       for(int d=-1; d<nfwd_; ++d){
         output(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
         output(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
@@ -600,8 +618,11 @@ namespace CasADi{
   
     // All inputs of the return function
     vector<MX> ret_in;
+    vector<MX> ret_in_new;
+
     ret_in.reserve(INTEGRATOR_NUM_IN*(1+nfwd) + INTEGRATOR_NUM_OUT*nadj);
-  
+    ret_in_new.reserve(NEW_INTEGRATOR_NUM_IN*(1+nfwd) + NEW_INTEGRATOR_NUM_OUT*nadj);
+
     // Augmented state
     vector<MX> x0_aug, p_aug, rx0_aug, rp_aug;
   
@@ -621,6 +642,7 @@ namespace CasADi{
       if(dir>=0) ss << "_" << dir;
       dd[INTEGRATOR_X0] = msym(ss.str(),input(INTEGRATOR_X0).sparsity());
       x0_aug.push_back(dd[INTEGRATOR_X0]);
+      ret_in_new.push_back(dd[INTEGRATOR_X0]);
 
       // Parameter
       ss.clear();
@@ -628,6 +650,7 @@ namespace CasADi{
       if(dir>=0) ss << "_" << dir;
       dd[INTEGRATOR_P] = msym(ss.str(),input(INTEGRATOR_P).sparsity());
       p_aug.push_back(dd[INTEGRATOR_P]);
+      ret_in_new.push_back(dd[INTEGRATOR_P]);
     
       // Backward state
       ss.clear();
@@ -656,12 +679,14 @@ namespace CasADi{
       ss << "xf" << "_" << dir;
       dd[INTEGRATOR_XF] = msym(ss.str(),output(INTEGRATOR_XF).sparsity());
       rx0_aug.push_back(dd[INTEGRATOR_XF]);
+      ret_in_new.push_back(dd[INTEGRATOR_XF]);
 
       // Quadratures become backward parameters
       ss.clear();
       ss << "qf" << "_" << dir;
       dd[INTEGRATOR_QF] = msym(ss.str(),output(INTEGRATOR_QF).sparsity());
       rp_aug.push_back(dd[INTEGRATOR_QF]);
+      ret_in_new.push_back(dd[INTEGRATOR_QF]);
 
       // Backward differential states becomes forward differential states
       ss.clear();
@@ -679,13 +704,18 @@ namespace CasADi{
       ret_in.insert(ret_in.end(),dd.begin(),dd.end());
     }
 
-    // Call the integrator
-    vector<MX> integrator_in(INTEGRATOR_NUM_IN);
-    integrator_in[INTEGRATOR_X0] = vertcat(x0_aug);
-    integrator_in[INTEGRATOR_P] = vertcat(p_aug);
-    integrator_in[INTEGRATOR_RX0] = vertcat(rx0_aug);
-    integrator_in[INTEGRATOR_RP] = vertcat(rp_aug);
-    vector<MX> integrator_out = integrator.call(integrator_in);
+    vector<MX> integrator_out;
+    if(integrator->new_signature_){
+      integrator_out = integrator.call(ret_in_new);
+    } else {
+      // Call the integrator
+      vector<MX> integrator_in(INTEGRATOR_NUM_IN);
+      integrator_in[INTEGRATOR_X0] = vertcat(x0_aug);
+      integrator_in[INTEGRATOR_P] = vertcat(p_aug);
+      integrator_in[INTEGRATOR_RX0] = vertcat(rx0_aug);
+      integrator_in[INTEGRATOR_RP] = vertcat(rp_aug);
+      integrator_out = integrator.call(integrator_in);
+    }
   
     // Offset in each of the above vectors
     vector<int> xf_offset(1,0), rxf_offset(1,0), qf_offset(1,0), rqf_offset(1,0);
@@ -710,7 +740,7 @@ namespace CasADi{
         casadi_assert(integrator_out.size() == INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
 
         // Create derivative function and return
-        return MXFunction(ret_in,integrator_out);
+        return MXFunction(ret_in_new,integrator_out);
       } else {
         vector<MX>::const_iterator it = integrator_out.begin();
         vector<MX> ret_out;

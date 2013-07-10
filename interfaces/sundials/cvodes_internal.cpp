@@ -119,7 +119,7 @@ namespace CasADi{
     if(mem_==0) throw CasadiException("CVodeCreate: Creation failed");
 
     // Allocate n-vectors for ivp
-    x0_ = N_VMake_Serial(nfx_,input(INTEGRATOR_X0).ptr());
+    x0_ = N_VNew_Serial(nfx_);
     x_ = N_VNew_Serial(nfx_);
 
     // Disable internal warning messages?
@@ -189,8 +189,31 @@ namespace CasADi{
       xF0_.resize(nfdir_,0);
       xF_.resize(nfdir_,0);
       for(int i=0; i<nfdir_; ++i){
-        xF0_[i] = N_VMake_Serial(nfx_,fwdSeed(INTEGRATOR_X0,i).ptr());
+        xF0_[i] = N_VNew_Serial(nfx_);
         xF_[i] = N_VNew_Serial(nfx_);
+      }
+
+      for(int d=0; d<nfdir_; ++d){
+        double* x = NV_DATA_S(xF0_[d]);
+        if(new_signature_){
+          casadi_assert(NV_LENGTH_S(xF0_[d]) == nx_ * (1+nfwd_) );
+
+          // Nondifferentiated output
+          fwdSeed(NEW_INTEGRATOR_X0,d).get(x);
+          x += nx_;
+
+          // Forward sensitivities
+          for(int d=0; d<nfwd_; ++d){
+            fwdSeed(NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_X0,d).get(x);
+            x += nx_;
+          }
+
+          // Adjoint sensitivities
+          // ..
+
+        } else {
+          fwdSeed(INTEGRATOR_X0,d).get(x);
+        }
       }
 
       // Allocate n-vectors for quadratures
@@ -268,7 +291,7 @@ namespace CasADi{
       //       rx_ = N_VNew_Serial((1+nfdir_)*nrx_);
       //       rq_ = N_VNew_Serial((1+nfdir_)*nrq_);
       //     } else {
-      rx0_ = N_VMake_Serial(nrx_,input(INTEGRATOR_RX0).ptr());
+      rx0_ = N_VNew_Serial(nrx_);
       rx_ = N_VNew_Serial(nrx_);
       rq_ = N_VNew_Serial(nrq_);
     
@@ -298,6 +321,23 @@ namespace CasADi{
     int flag = CVodeCreateB(mem_, lmm_, iter_, &whichB_);
     if(flag != CV_SUCCESS) cvodes_error("CVodeCreateB",flag);
   
+
+
+    if(new_signature_){
+      casadi_assert(NV_LENGTH_S(rx0_) == nx_ * nadj_ );
+      double* rx = NV_DATA_S(rx0_);
+
+      // Adjoint sensitivities
+      for(int d=0; d<nadj_; ++d){
+        input(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_XF).get(rx);
+        rx += nx_;
+      }
+
+    } else {
+      input(INTEGRATOR_RX0).set(NV_DATA_S(rx0_));
+    }
+
+
     // Initialize the backward problem
     double tB0 = tf_;  
     flag = CVodeInitB(mem_, whichB_, rhsB_wrapper, tB0, rx0_);
@@ -355,7 +395,7 @@ namespace CasADi{
     // Pass input
     f_.setInput(&t,DAE_T);
     f_.setInput(x,DAE_X);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     if(monitor_rhs_) {
       cout << "t       = " << t << endl;
@@ -406,6 +446,27 @@ namespace CasADi{
     // Reset timers
     t_res = t_fres = t_jac = t_lsolve = t_lsetup_jac = t_lsetup_fac = 0;
   
+    if(new_signature_){
+      double* x = NV_DATA_S(x0_);
+      casadi_assert(NV_LENGTH_S(x0_) == nx_ * (1+nfwd_) );
+
+      // Nondifferentiated output
+      input(NEW_INTEGRATOR_X0).get(x);
+      x += nx_;
+
+      // Forward sensitivities
+      for(int d=0; d<nfwd_; ++d){
+        input(NEW_INTEGRATOR_NUM_IN*(d+1)+NEW_INTEGRATOR_X0).get(x);
+        x += nx_;
+      }
+
+      // Adjoint sensitivities
+      // ..
+
+    } else {
+      input(INTEGRATOR_X0).get(NV_DATA_S(x0_));
+    }
+
     // Re-initialize
     int flag = CVodeReInit(mem_, t0_, x0_);
     if(flag!=CV_SUCCESS) cvodes_error("CVodeReInit",flag);
@@ -419,6 +480,32 @@ namespace CasADi{
   
     // Re-initialize sensitivities
     if(nsens>0){
+
+
+      for(int d=0; d<nfdir_; ++d){
+        double* x = NV_DATA_S(xF0_[d]);
+        if(new_signature_){
+          casadi_assert(NV_LENGTH_S(xF0_[d]) == nx_ * (1+nfwd_) );
+
+          // Nondifferentiated output
+          fwdSeed(NEW_INTEGRATOR_X0,d).get(x);
+          x += nx_;
+
+          // Forward sensitivities
+          for(int d=0; d<nfwd_; ++d){
+            fwdSeed(NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_X0,d).get(x);
+            x += nx_;
+          }
+
+          // Adjoint sensitivities
+          // ..
+
+        } else {
+          fwdSeed(INTEGRATOR_X0,d).get(x);
+        }
+      }
+
+
       flag = CVodeSensReInit(mem_,ism_,getPtr(xF0_));
       if(flag != CV_SUCCESS) cvodes_error("CVodeSensReInit",flag);
     
@@ -605,6 +692,21 @@ namespace CasADi{
     if(isInitAdj_){
     
     
+      if(new_signature_){
+        casadi_assert(NV_LENGTH_S(rx0_) == nx_ * nadj_ );
+        double* rx = NV_DATA_S(rx0_);
+
+        // Adjoint sensitivities
+        for(int d=0; d<nadj_; ++d){
+          input(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_XF).get(rx);
+          rx += nx_;
+        }
+
+      } else {
+        input(INTEGRATOR_RX0).set(NV_DATA_S(rx0_));
+      }
+
+
     
       flag = CVodeReInitB(mem_, whichB_, tf_, rx0_);
       if(flag != CV_SUCCESS) cvodes_error("CVodeReInitB",flag);
@@ -812,7 +914,7 @@ namespace CasADi{
     // Pass input
     f_.setInput(&t,DAE_T);
     f_.setInput(NV_DATA_S(x),DAE_X);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     // Calculate the forward sensitivities, nfdir_f_ directions at a time
     for(int j=0; j<nfdir_; j += nfdir_f_){
@@ -820,7 +922,7 @@ namespace CasADi{
         // Pass forward seeds 
         f_.fwdSeed(DAE_T,dir).setZero();
         f_.setFwdSeed(NV_DATA_S(xF[j+dir]),DAE_X,dir);
-        f_.setFwdSeed(fwdSeed(INTEGRATOR_P,j+dir),DAE_P,dir);
+        getP(f_.fwdSeed(DAE_P,dir),j+dir);
       }
 
       // Evaluate the AD forward algorithm
@@ -855,12 +957,12 @@ namespace CasADi{
     // Pass input
     f_.setInput(&t,DAE_T);
     f_.setInput(NV_DATA_S(x),DAE_X);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     // Pass forward seeds
     f_.fwdSeed(DAE_T).setZero();
     f_.setFwdSeed(NV_DATA_S(xF),DAE_X);
-    f_.setFwdSeed(fwdSeed(INTEGRATOR_P,iS),DAE_P);
+    getP(f_.fwdSeed(DAE_P),iS);
     
     // Evaluate the AD forward algorithm
     f_.evaluate(1,0);
@@ -897,7 +999,7 @@ namespace CasADi{
     // Pass input
     f_.setInput(&t,DAE_T);
     f_.setInput(x,DAE_X);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     // Evaluate
     f_.evaluate();
@@ -912,13 +1014,13 @@ namespace CasADi{
     // Pass input
     f_.setInput(&t,DAE_T);
     f_.setInput(NV_DATA_S(x),DAE_X);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     for(int i=0; i<nfdir_; ++i){
       // Pass forward seeds
       f_.fwdSeed(DAE_T).setZero();
       f_.setFwdSeed(NV_DATA_S(xF[i]),DAE_X);
-      f_.setFwdSeed(fwdSeed(INTEGRATOR_P,i),DAE_P);
+      getP(f_.fwdSeed(DAE_P),i);
 
       // Evaluate the AD forward algorithm
       f_.evaluate(1,0);
@@ -951,8 +1053,8 @@ namespace CasADi{
     // Pass inputs
     g_.setInput(&t,RDAE_T);
     g_.setInput(x,RDAE_X);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(g_.input(RDAE_P));
+    getRP(g_.input(RDAE_RP));
     g_.setInput(rx,RDAE_RX);
 
     if(monitor_rhsB_){
@@ -985,8 +1087,8 @@ namespace CasADi{
     // Pass input
     g_.setInput(&t,RDAE_T);
     g_.setInput(NV_DATA_S(x),RDAE_X);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(g_.input(RDAE_P));
+    getRP(g_.input(RDAE_RP));
   
     // Pass backward state
     const double *rx_data = NV_DATA_S(rx);
@@ -998,8 +1100,8 @@ namespace CasADi{
     for(int dir=0; dir<nfdir_; ++dir){
       g_.fwdSeed(RDAE_T,dir).setZero();
       g_.setFwdSeed(rx_data,RDAE_RX,dir); rx_data += nrx_;
-      g_.setFwdSeed(fwdSeed(INTEGRATOR_P,dir),RDAE_P,dir);
-      g_.setFwdSeed(fwdSeed(INTEGRATOR_RP,dir),RDAE_RP,dir);
+      getP(g_.fwdSeed(RDAE_P,dir),dir);
+      getRP(g_.fwdSeed(RDAE_RP,dir),dir);
       g_.setFwdSeed(NV_DATA_S(xF[dir]),RDAE_X,dir);
     }
 
@@ -1062,8 +1164,8 @@ namespace CasADi{
     // Pass inputs
     g_.setInput(&t,RDAE_T);
     g_.setInput(x,RDAE_X);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(g_.input(RDAE_P));
+    getRP(g_.input(RDAE_RP));
     g_.setInput(rx,RDAE_RX);
 
     if(monitor_rhsB_){
@@ -1125,7 +1227,7 @@ namespace CasADi{
     // Pass input
     f_.setInput(&t,DAE_T);
     f_.setInput(NV_DATA_S(x),DAE_X);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     // Pass input seeds
     f_.fwdSeed(DAE_T).setZero();
@@ -1153,9 +1255,9 @@ namespace CasADi{
     // Pass input
     g_.setInput(&t,RDAE_T);
     g_.setInput(NV_DATA_S(x),RDAE_X);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
+    getP(g_.input(RDAE_P));
     g_.setInput(NV_DATA_S(xB),RDAE_RX);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getRP(g_.input(RDAE_RP));
   
     // Pass input seeds
     g_.fwdSeed(RDAE_T).setZero();
@@ -1261,9 +1363,9 @@ namespace CasADi{
     // Pass inputs to the jacobian function
     jacB_.setInput(&t,RDAE_T);
     jacB_.setInput(NV_DATA_S(x),RDAE_X);
-    jacB_.setInput(input(INTEGRATOR_P),RDAE_P);
+    getP(jacB_.input(RDAE_P));
     jacB_.setInput(NV_DATA_S(xB),RDAE_RX);
-    jacB_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getRP(jacB_.input(RDAE_RP));
     jacB_.setInput(-1.0,RDAE_NUM_IN); // validated
     jacB_.setInput(0.0,RDAE_NUM_IN+1);
 
@@ -1383,9 +1485,9 @@ namespace CasADi{
     // Pass inputs to the jacobian function
     jacB_.setInput(&t,RDAE_T);
     jacB_.setInput(NV_DATA_S(x),RDAE_X);
-    jacB_.setInput(input(INTEGRATOR_P),RDAE_P);
+    getP(jacB_.input(RDAE_P));
     jacB_.setInput(NV_DATA_S(xB),RDAE_RX);
-    jacB_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getRP(jacB_.input(RDAE_RP));
     jacB_.setInput(-1.0,RDAE_NUM_IN);
     jacB_.setInput(0.0,RDAE_NUM_IN+1);
   
@@ -1529,7 +1631,7 @@ namespace CasADi{
     // Pass input to the jacobian function
     jac_.setInput(&t,DAE_T);
     jac_.setInput(NV_DATA_S(x),DAE_X);
-    jac_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(jac_.input(DAE_P));
     jac_.setInput(-gamma,DAE_NUM_IN);
     jac_.setInput(1.0,DAE_NUM_IN+1);
 
@@ -1561,9 +1663,9 @@ namespace CasADi{
     // Pass inputs to the jacobian function
     jacB_.setInput(&t,RDAE_T);
     jacB_.setInput(NV_DATA_S(x),RDAE_X);
-    jacB_.setInput(input(INTEGRATOR_P),RDAE_P);
+    getP(jacB_.input(RDAE_P));
     jacB_.setInput(NV_DATA_S(xB),RDAE_RX);
-    jacB_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getRP(jacB_.input(RDAE_RP));
     jacB_.setInput(gammaB,RDAE_NUM_IN); // validated
     jacB_.setInput(1.0,RDAE_NUM_IN+1); // validated
 

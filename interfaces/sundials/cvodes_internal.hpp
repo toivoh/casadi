@@ -232,6 +232,51 @@ namespace CasADi{
     bool monitor_rhsQB_;
   
     bool disable_internal_warnings_;
+
+    void getP(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==(1+nfwd_)*np_);
+
+      double* v = p.ptr();
+      if(new_signature_){
+        for(int d=-1; d<nfwd_; ++d){
+          if(dir<0){
+            input(NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_P).get(v);
+          } else {
+            fwdSeed(NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_P,dir).get(v);
+          }
+          v += np_;
+        }        
+      } else {
+        if(dir<0){
+          input(INTEGRATOR_P).get(v);
+        } else {
+          fwdSeed(INTEGRATOR_P,dir).get(v);
+        }
+      }
+    }
+
+
+    void getRP(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==nadj_*nq_);
+
+      double* v = p.ptr();
+      if(new_signature_){
+        for(int d=0; d<nadj_; ++d){
+          if(dir<0){
+            input(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_QF).get(v);
+          } else {
+            fwdSeed(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_QF,dir).get(v);
+          }
+          v += nq_;
+        }        
+      } else {
+        if(dir<0){
+          input(INTEGRATOR_RP).get(v);
+        } else {
+          fwdSeed(INTEGRATOR_RP,dir).get(v);
+        }
+      }
+    }
   
   };
 
