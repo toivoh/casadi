@@ -789,10 +789,12 @@ namespace CasADi{
     nsensB_ = nsensB;
     nsensB_store_ = nsensB_store;
   
-    // Initialize output (relevant for integration with a zero advance time )
-    copy(input(INTEGRATOR_X0).begin(),input(INTEGRATOR_X0).end(),output(INTEGRATOR_XF).begin());
-    for(int i=0; i<nfdir_; ++i)
-      copy(fwdSeed(INTEGRATOR_X0,i).begin(),fwdSeed(INTEGRATOR_X0,i).end(),fwdSens(INTEGRATOR_XF,i).begin());
+    if(!new_signature_){
+      // Initialize output (relevant for integration with a zero advance time )
+      copy(input(INTEGRATOR_X0).begin(),input(INTEGRATOR_X0).end(),output(INTEGRATOR_XF).begin());
+      for(int i=0; i<nfdir_; ++i)
+        copy(fwdSeed(INTEGRATOR_X0,i).begin(),fwdSeed(INTEGRATOR_X0,i).end(),fwdSens(INTEGRATOR_XF,i).begin());
+    }
     log("IntegratorInternal::reset","end");
   }
 
