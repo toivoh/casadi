@@ -60,7 +60,7 @@ namespace CasADi{
   
     // Call the base class init
     IntegratorInternal::init();
-  
+    
     // Read options
     bool expand = getOption("expand");
   
@@ -299,7 +299,9 @@ namespace CasADi{
       gfcn_in[NEW_INTEGRATOR_X0] = X0;
       gfcn_in[NEW_INTEGRATOR_P] = P;
       ifcn_in[0] = implicit_solver_.call(gfcn_in).front();
-      explicit_fcn_ = MXFunction(gfcn_in,afcn.call(ifcn_in));
+      vector<MX> gfcn_out = afcn.call(ifcn_in);
+      gfcn_out.erase(gfcn_out.begin());
+      explicit_fcn_ = MXFunction(gfcn_in,gfcn_out);
       explicit_fcn_.init();
 
       // Form derivative
@@ -647,7 +649,7 @@ namespace CasADi{
             // Integrate to the time point
             startup_integrator_.integrate(coll_time_[k][j]);
           }
-          
+
           // Save the differential states
           if(new_signature_){
             const DMatrix& x = has_startup_integrator ? startup_integrator_.output(INTEGRATOR_XF) : input(INTEGRATOR_X0);
@@ -673,21 +675,22 @@ namespace CasADi{
             }
           }
         
-          // Skip backward states // FIXME
-          const DMatrix& rx = input(INTEGRATOR_RX0);
-          for(int i=0; i<nrx_; ++i){
-            v.at(offs++) = rx.at(i);
-          }
-        
-          // Skip backward algebraic variables // FIXME
           if(!new_signature_){
+
+            // Skip backward states // FIXME
+            const DMatrix& rx = input(INTEGRATOR_RX0);
+            for(int i=0; i<nrx_; ++i){
+              v.at(offs++) = rx.at(i);
+            }
+            
+            // Skip backward algebraic variables // FIXME
             if(j>0){
               offs += nrz_;
             }
           }
         }
       }
-      
+          
       // Print
       if(has_startup_integrator && verbose()){
         cout << "startup trajectory generated, statistics:" << endl;
@@ -706,10 +709,19 @@ namespace CasADi{
   }
 
   void CollocationIntegratorInternal::integrate(double t_out){
-    for(int oind=0; oind<getNumOutputs(); ++oind){
-      output(oind).set(explicit_fcn_.output(1+oind));
-      for(int dir=0; dir<nsens_; ++dir){
-        fwdSens(oind,dir).set(explicit_fcn_.fwdSens(1+oind,dir));
+    if(new_signature_){
+      for(int oind=0; oind<getNumOutputs(); ++oind){
+        output(oind).set(explicit_fcn_.output(oind));
+        for(int dir=0; dir<nsens_; ++dir){
+          fwdSens(oind,dir).set(explicit_fcn_.fwdSens(oind,dir));
+        }
+      }
+    } else {
+      for(int oind=0; oind<INTEGRATOR_NUM_OUT; ++oind){
+        output(oind).set(explicit_fcn_.output(1+oind));
+        for(int dir=0; dir<nsens_; ++dir){
+          fwdSens(oind,dir).set(explicit_fcn_.fwdSens(1+oind,dir));
+        }
       }
     }
   }
