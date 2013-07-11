@@ -233,16 +233,49 @@ namespace CasADi{
   
     bool disable_internal_warnings_;
 
+    void getX0(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==(1+nfwd_)*nx_);
+      double* v = p.ptr();
+      getX0(v,dir);
+    }
+
+    void getX0(N_Vector p, int dir = -1){
+      casadi_assert(NV_LENGTH_S(p)==(1+nfwd_)*nx_);
+      double* v = NV_DATA_S(p);
+      getX0(v,dir);
+    }
+
+    void getX0(double* v, int dir = -1){
+      if(new_signature_){
+        for(int d=-1; d<nfwd_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_X0;
+          if(dir<0){
+            input(ind).get(v);
+          } else {
+            fwdSeed(ind,dir).get(v);
+          }
+          v += nx_;
+        }        
+      } else {
+        if(dir<0){
+          input(INTEGRATOR_X0).get(v);
+        } else {
+          fwdSeed(INTEGRATOR_X0,dir).get(v);
+        }
+      }
+    }
+
     void getP(DMatrix& p, int dir = -1){
       casadi_assert(p.size()==(1+nfwd_)*np_);
 
       double* v = p.ptr();
       if(new_signature_){
         for(int d=-1; d<nfwd_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_P;
           if(dir<0){
-            input(NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_P).get(v);
+            input(ind).get(v);
           } else {
-            fwdSeed(NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_P,dir).get(v);
+            fwdSeed(ind,dir).get(v);
           }
           v += np_;
         }        
@@ -255,6 +288,37 @@ namespace CasADi{
       }
     }
 
+    void getRX0(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==nadj_*nx_);
+      double* v = p.ptr();
+      getRX0(v,dir);
+    }
+
+    void getRX0(N_Vector p, int dir = -1){
+      casadi_assert(NV_LENGTH_S(p)==nadj_*nx_);
+      double* v = NV_DATA_S(p);
+      getRX0(v,dir);
+    }
+
+    void getRX0(double* v, int dir = -1){
+      if(new_signature_){
+        for(int d=0; d<nadj_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_XF;
+          if(dir<0){
+            input(ind).get(v);
+          } else {
+            fwdSeed(ind,dir).get(v);
+          }
+          v += nx_;
+        }        
+      } else {
+        if(dir<0){
+          input(INTEGRATOR_RX0).get(v);
+        } else {
+          fwdSeed(INTEGRATOR_RX0,dir).get(v);
+        }
+      }
+    }
 
     void getRP(DMatrix& p, int dir = -1){
       casadi_assert(p.size()==nadj_*nq_);
@@ -262,10 +326,11 @@ namespace CasADi{
       double* v = p.ptr();
       if(new_signature_){
         for(int d=0; d<nadj_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_QF;
           if(dir<0){
-            input(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_QF).get(v);
+            input(ind).get(v);
           } else {
-            fwdSeed(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_QF,dir).get(v);
+            fwdSeed(ind,dir).get(v);
           }
           v += nq_;
         }        
@@ -277,6 +342,13 @@ namespace CasADi{
         }
       }
     }
+
+
+    
+
+
+
+
   
   };
 
