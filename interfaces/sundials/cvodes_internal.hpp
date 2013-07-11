@@ -173,7 +173,7 @@ namespace CasADi{
     double t_lsetup_fac; // preconditioner setup function, factorize jacobian
   
     // N-vectors for the forward integration
-    N_Vector x0_, x_, q_;
+    N_Vector x_, q_;
   
     // N-vectors for the backward integration
     N_Vector rx0_, rx_, rq_;

@@ -51,7 +51,7 @@ namespace CasADi{
     
     mem_ = 0;
 
-    x0_ = x_ = q_ = 0;
+    x_ = q_ = 0;
     rx0_ = rx_ = rq_ = 0;
 
     isInitAdj_ = false;
@@ -62,7 +62,6 @@ namespace CasADi{
     if(mem_) { CVodeFree(&mem_); mem_ = 0;}
 
     // Forward integration
-    if(x0_) { N_VDestroy_Serial(x0_); x0_ = 0; }
     if(x_) { N_VDestroy_Serial(x_); x_ = 0; }
     if(q_) { N_VDestroy_Serial(q_); q_ = 0; }
   
@@ -119,8 +118,8 @@ namespace CasADi{
     if(mem_==0) throw CasadiException("CVodeCreate: Creation failed");
 
     // Allocate n-vectors for ivp
-    x0_ = N_VMake_Serial(nfx_,input(INTEGRATOR_X0).ptr());
     x_ = N_VNew_Serial(nfx_);
+    getX0(x_);
 
     // Disable internal warning messages?
     disable_internal_warnings_ = getOption("disable_internal_warnings");
@@ -131,7 +130,7 @@ namespace CasADi{
 
     // Initialize CVodes
     double t0 = 0;
-    flag = CVodeInit(mem_, rhs_wrapper, t0, x0_);
+    flag = CVodeInit(mem_, rhs_wrapper, t0, x_);
     if(flag!=CV_SUCCESS) cvodes_error("CVodeInit",flag);
 
     // Set tolerances
@@ -407,7 +406,8 @@ namespace CasADi{
     t_res = t_fres = t_jac = t_lsolve = t_lsetup_jac = t_lsetup_fac = 0;
   
     // Re-initialize
-    int flag = CVodeReInit(mem_, t0_, x0_);
+    getX0(x_);
+    int flag = CVodeReInit(mem_, t0_, x_);
     if(flag!=CV_SUCCESS) cvodes_error("CVodeReInit",flag);
   
     // Re-initialize quadratures
