@@ -52,7 +52,7 @@ namespace CasADi{
     mem_ = 0;
 
     x_ = q_ = 0;
-    rx0_ = rx_ = rq_ = 0;
+    rx_ = rq_ = 0;
 
     isInitAdj_ = false;
     disable_internal_warnings_ = false;
@@ -66,7 +66,6 @@ namespace CasADi{
     if(q_) { N_VDestroy_Serial(q_); q_ = 0; }
   
     // Backward integration
-    if(rx0_) { N_VDestroy_Serial(rx0_); rx0_ = 0; }
     if(rx_)  { N_VDestroy_Serial(rx_);  rx_  = 0; }
     if(rq_)  { N_VDestroy_Serial(rq_);  rq_  = 0; }
   
@@ -267,8 +266,8 @@ namespace CasADi{
       //       rx_ = N_VNew_Serial((1+nfdir_)*nrx_);
       //       rq_ = N_VNew_Serial((1+nfdir_)*nrq_);
       //     } else {
-      rx0_ = N_VMake_Serial(nrx_,input(INTEGRATOR_RX0).ptr());
       rx_ = N_VNew_Serial(nrx_);
+      getRX0(rx_);
       rq_ = N_VNew_Serial(nrq_);
     
       // Get the number of steos per checkpoint
@@ -299,9 +298,10 @@ namespace CasADi{
   
     // Initialize the backward problem
     double tB0 = tf_;  
-    flag = CVodeInitB(mem_, whichB_, rhsB_wrapper, tB0, rx0_);
+    getRX0(rx_);
+    flag = CVodeInitB(mem_, whichB_, rhsB_wrapper, tB0, rx_);
     if(flag != CV_SUCCESS) cvodes_error("CVodeInitB",flag);
-    //   flag = CVodeInitBS(mem_, whichB_, rhsBS_wrapper, tB0, rx0_); // NOTE: Would be needed for forward sensitivities of the backward problem
+    //   flag = CVodeInitBS(mem_, whichB_, rhsBS_wrapper, tB0, rx_); // NOTE: Would be needed for forward sensitivities of the backward problem
     //   if(flag != CV_SUCCESS) cvodes_error("CVodeInitBS",flag);
 
     // Set tolerances
@@ -605,8 +605,8 @@ namespace CasADi{
     if(isInitAdj_){
     
     
-    
-      flag = CVodeReInitB(mem_, whichB_, tf_, rx0_);
+      getRX0(rx_);
+      flag = CVodeReInitB(mem_, whichB_, tf_, rx_);
       if(flag != CV_SUCCESS) cvodes_error("CVodeReInitB",flag);
 
       N_VConst(0.0,rq_);

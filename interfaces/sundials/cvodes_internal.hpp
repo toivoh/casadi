@@ -176,7 +176,7 @@ namespace CasADi{
     N_Vector x_, q_;
   
     // N-vectors for the backward integration
-    N_Vector rx0_, rx_, rq_;
+    N_Vector rx_, rq_;
 
     // N-vectors for the forward sensitivities
     std::vector<N_Vector> xF0_, xF_, qF_;
