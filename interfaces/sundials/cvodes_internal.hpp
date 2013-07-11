@@ -179,7 +179,7 @@ namespace CasADi{
     N_Vector rx_, rq_;
 
     // N-vectors for the forward sensitivities
-    std::vector<N_Vector> xF0_, xF_, qF_;
+    std::vector<N_Vector> xF_, qF_;
 
     bool isInitAdj_;
 

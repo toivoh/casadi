@@ -70,7 +70,6 @@ namespace CasADi{
     if(rq_)  { N_VDestroy_Serial(rq_);  rq_  = 0; }
   
     // Sensitivities of the forward integration
-    for(vector<N_Vector>::iterator it=xF0_.begin(); it != xF0_.end(); ++it)   if(*it) { N_VDestroy_Serial(*it); *it=0;}
     for(vector<N_Vector>::iterator it=xF_.begin(); it != xF_.end(); ++it)     if(*it) { N_VDestroy_Serial(*it); *it=0;}
     for(vector<N_Vector>::iterator it=qF_.begin(); it != qF_.end(); ++it)   if(*it) { N_VDestroy_Serial(*it); *it=0;}
   }
@@ -184,11 +183,10 @@ namespace CasADi{
     // Forward sensitivity problem
     if(nfdir_>0){
       // Allocate n-vectors
-      xF0_.resize(nfdir_,0);
       xF_.resize(nfdir_,0);
       for(int i=0; i<nfdir_; ++i){
-        xF0_[i] = N_VMake_Serial(nfx_,fwdSeed(INTEGRATOR_X0,i).ptr());
         xF_[i] = N_VNew_Serial(nfx_);
+        getX0(xF_[i],i);
       }
 
       // Allocate n-vectors for quadratures
@@ -211,10 +209,10 @@ namespace CasADi{
       if(finite_difference_fsens_){
         // Use finite differences to calculate the residual in the forward sensitivity equations
         if(all_at_once){
-          flag = CVodeSensInit(mem_,nfdir_,ism_,0,getPtr(xF0_));
+          flag = CVodeSensInit(mem_,nfdir_,ism_,0,getPtr(xF_));
           if(flag != CV_SUCCESS) cvodes_error("CVodeSensInit",flag);
         } else {
-          flag = CVodeSensInit1(mem_,nfdir_,ism_,0,getPtr(xF0_));
+          flag = CVodeSensInit1(mem_,nfdir_,ism_,0,getPtr(xF_));
           if(flag != CV_SUCCESS) cvodes_error("CVodeSensInit1",flag);
         }
       
@@ -227,10 +225,10 @@ namespace CasADi{
       } else {
         if(all_at_once){
           // Use AD to calculate the residual in the forward sensitivity equations
-          flag = CVodeSensInit(mem_,nfdir_,ism_,rhsS_wrapper,getPtr(xF0_));
+          flag = CVodeSensInit(mem_,nfdir_,ism_,rhsS_wrapper,getPtr(xF_));
           if(flag != CV_SUCCESS) cvodes_error("CVodeSensInit",flag);
         } else {
-          flag = CVodeSensInit1(mem_,nfdir_,ism_,rhsS1_wrapper,getPtr(xF0_));
+          flag = CVodeSensInit1(mem_,nfdir_,ism_,rhsS1_wrapper,getPtr(xF_));
           if(flag != CV_SUCCESS) cvodes_error("CVodeSensInit",flag);
         }
       }
@@ -396,6 +394,11 @@ namespace CasADi{
     // Reset the base classes
     SundialsInternal::reset(nsens,nsensB,nsensB_store);
   
+    // Read inputs
+    for(int i=0; i<nfdir_; ++i){
+      getX0(xF_[i],i);
+    }
+
     if(monitored("reset")){
       cout << "initial state: " << endl;
       cout << "p = " << input(INTEGRATOR_P) << endl;
@@ -419,7 +422,7 @@ namespace CasADi{
   
     // Re-initialize sensitivities
     if(nsens>0){
-      flag = CVodeSensReInit(mem_,ism_,getPtr(xF0_));
+      flag = CVodeSensReInit(mem_,ism_,getPtr(xF_));
       if(flag != CV_SUCCESS) cvodes_error("CVodeSensReInit",flag);
     
       if(nfq_>0){
