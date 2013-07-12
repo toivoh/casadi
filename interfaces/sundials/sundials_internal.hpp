@@ -257,6 +257,70 @@ namespace CasADi{
       }
     }
 
+    void setRXF(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==nadj_*nx_);
+      double* v = p.ptr();
+      setRXF(v,dir);
+    }
+
+    void setRXF(N_Vector p, int dir = -1){
+      casadi_assert(NV_LENGTH_S(p)==nadj_*nx_);
+      double* v = NV_DATA_S(p);
+      setRXF(v,dir);
+    }
+
+    void setRXF(double* v, int dir = -1){
+      if(new_signature_){
+        for(int d=0; d<nadj_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_X0;
+          if(dir<0){
+            output(ind).set(v);
+          } else {
+            fwdSens(ind,dir).set(v);
+          }
+          v += nx_;
+        }        
+      } else {
+        if(dir<0){
+          output(INTEGRATOR_RXF).set(v);
+        } else {
+          fwdSens(INTEGRATOR_RXF,dir).set(v);
+        }
+      }
+    }
+
+    void setRQF(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==nadj_*np_);
+      double* v = p.ptr();
+      setRQF(v,dir);
+    }
+
+    void setRQF(N_Vector p, int dir = -1){
+      casadi_assert(NV_LENGTH_S(p)==nadj_*np_);
+      double* v = NV_DATA_S(p);
+      setRQF(v,dir);
+    }
+
+    void setRQF(double* v, int dir = -1){
+      if(new_signature_){
+        for(int d=0; d<nadj_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_P;
+          if(dir<0){
+            output(ind).set(v);
+          } else {
+            fwdSens(ind,dir).set(v);
+          }
+          v += np_;
+        }        
+      } else {
+        if(dir<0){
+          output(INTEGRATOR_RQF).set(v);
+        } else {
+          fwdSens(INTEGRATOR_RQF,dir).set(v);
+        }
+      }
+    }
+
     void getRP(DMatrix& p, int dir = -1){
       casadi_assert(p.size()==nadj_*nq_);
 

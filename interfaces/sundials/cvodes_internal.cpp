@@ -550,29 +550,11 @@ namespace CasADi{
     double tret;
     flag = CVodeGetB(mem_, whichB_, &tret, rx_);
     if(flag!=CV_SUCCESS) cvodes_error("CVodeGetB",flag);
+    setRXF(rx_);
 
     flag = CVodeGetQuadB(mem_, whichB_, &tret, rq_);
     if(flag!=CV_SUCCESS) cvodes_error("CVodeGetQuadB",flag);
-
-    if(new_signature_){
-      casadi_assert(NV_LENGTH_S(rx_) == nx_ * nadj_ );
-      casadi_assert(NV_LENGTH_S(rq_) == nq_ * nadj_ );
-      double* rx = NV_DATA_S(rx_);
-      double* rq = NV_DATA_S(rq_);
-
-      // Adjoint sensitivities
-      for(int d=0; d<nadj_; ++d){
-        output(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_X0).set(rx);
-        rx += nx_;
-
-        output(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_P).set(rq);
-        rq += nq_;
-      }
-
-    } else {
-      output(INTEGRATOR_RXF).set(NV_DATA_S(rx_));
-      output(INTEGRATOR_RQF).set(NV_DATA_S(rq_));
-    }
+    setRQF(rq_);
   
     if (gather_stats_) {
       long nsteps, nfevals, nlinsetups, netfails;

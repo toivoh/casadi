@@ -365,7 +365,7 @@ namespace CasADi{
       N_VConst(0.0, rxzdot_);
 
       // Allocate n-vectors for quadratures
-      rq_ = N_VMake_Serial(nrq_,output(INTEGRATOR_RQF).ptr());
+      rq_ = N_VNew_Serial(nrq_);
     }
     log("IdasInternal::init","initialized adjoint sensitivities");
  
@@ -454,6 +454,7 @@ namespace CasADi{
   
     // Quadratures for the adjoint problem
     N_VConst(0.0,rq_);
+    setRQF(rq_);
     flag = IDAQuadInitB(mem_,whichB_,rhsQB_wrapper,rq_);
     if(flag!=IDA_SUCCESS) idas_error("IDAQuadInitB",flag);
 
@@ -943,6 +944,7 @@ namespace CasADi{
   
     // Reset adjoint sensitivities for the parameters
     N_VConst(0.0, rq_);
+    setRQF(rq_);
   
     // Get the adjoint seeds
     getRX0(NV_DATA_S(rxz_));
@@ -995,11 +997,11 @@ namespace CasADi{
     if(nrq_>0){
       flag = IDAGetQuadB(mem_, whichB_, &tret, rq_);
       if(flag!=IDA_SUCCESS) idas_error("IDAGetQuadB",flag);
+      setRQF(rq_);
     }
   
     // Save the adjoint sensitivities
-    const double *rxz = NV_DATA_S(rxz_);
-    copy(rxz,rxz+nrx_,output(INTEGRATOR_RXF).begin());
+    setRXF(NV_DATA_S(rxz_));
   
     if (gather_stats_) {
       long nsteps, nfevals, nlinsetups, netfails;
