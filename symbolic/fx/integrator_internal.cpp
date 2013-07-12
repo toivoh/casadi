@@ -53,7 +53,7 @@ namespace CasADi{
     inputScheme_ = SCHEME_IntegratorInput;
     outputScheme_ = SCHEME_IntegratorOutput;
 
-    new_signature_ = false;
+    new_signature_ = true;
     f_ = dae_;
   }
 
@@ -595,6 +595,7 @@ namespace CasADi{
   }
 
   FX IntegratorInternal::getDerivative(int nfwd, int nadj){
+
     log("IntegratorInternal::getDerivative","begin");
     // Generate augmented DAE
     std::pair<FX,FX> aug_dae = getAugmented(nfwd,nadj);
@@ -618,7 +619,7 @@ namespace CasADi{
     vector<MX> integrator_in = integrator.symbolicInput();
     vector<MX> integrator_out = integrator.call(integrator_in);
 
-    if(false && new_signature_){
+    if(new_signature_){
       vector<MX> ret_in(integrator_in.size());
       vector<MX> ret_out(integrator_out.size());
       vector<MX>::const_iterator integrator_in_it = integrator_in.begin();
