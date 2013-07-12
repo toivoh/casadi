@@ -138,6 +138,38 @@ namespace CasADi{
       }
     }
 
+   void setQF(DMatrix& p, int dir = -1){
+      casadi_assert(p.size()==(1+nfwd_)*nq_);
+      double* v = p.ptr();
+      setQF(v,dir);
+    }
+
+    void setQF(N_Vector p, int dir = -1){
+      casadi_assert(NV_LENGTH_S(p)==(1+nfwd_)*nq_);
+      double* v = NV_DATA_S(p);
+      setQF(v,dir);
+    }
+
+    void setQF(double* v, int dir = -1){
+      if(new_signature_){
+        for(int d=-1; d<nfwd_; ++d){
+          int ind = NEW_INTEGRATOR_NUM_OUT*(1+d)+NEW_INTEGRATOR_QF;
+          if(dir<0){
+            output(ind).set(v);
+          } else {
+            fwdSens(ind,dir).set(v);
+          }
+          v += nq_;
+        }        
+      } else {
+        if(dir<0){
+          output(INTEGRATOR_QF).set(v);
+        } else {
+          fwdSens(INTEGRATOR_QF,dir).set(v);
+        }
+      }
+    }
+
     void getP(DMatrix& p, int dir = -1){
       casadi_assert(p.size()==(1+nfwd_)*np_);
 

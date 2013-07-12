@@ -229,7 +229,7 @@ namespace CasADi{
     if(nfq_>0){
 
       // Allocate n-vectors for quadratures
-      q_ = N_VMake_Serial(nfq_,&output(INTEGRATOR_QF).front());
+      q_ = N_VNew_Serial(nfq_);
 
       // Initialize quadratures in IDAS
       N_VConst(0.0, q_);
@@ -259,7 +259,7 @@ namespace CasADi{
         xzF_[i] = N_VNew_Serial(nfx_+nfz_);
         xzdotF_[i] = N_VNew_Serial(nfx_+nfz_);
         if(nfq_>0){
-          qF_[i] = N_VMake_Serial(nfq_,&fwdSens(INTEGRATOR_QF,i).front());
+          qF_[i] = N_VNew_Serial(nfq_);
         }
       }
       
@@ -893,6 +893,7 @@ namespace CasADi{
         double tret;
         flag = IDAGetQuad(mem_, &tret, q_);
         if(flag != IDA_SUCCESS) idas_error("IDAGetQuad",flag);
+        setQF(q_);
       }
     
       if(nsens_>0){
@@ -904,6 +905,9 @@ namespace CasADi{
           double tret;
           flag = IDAGetQuadSens(mem_, &tret, getPtr(qF_));
           if(flag != IDA_SUCCESS) idas_error("IDAGetQuadSens",flag);
+          for(int i=0; i<nfdir_; ++i){
+            setQF(qF_[i],i);
+          }
         }
       }
     }
