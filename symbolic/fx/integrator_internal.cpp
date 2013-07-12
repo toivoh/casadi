@@ -216,24 +216,6 @@ namespace CasADi{
     casadi_assert(nfx_ == (1+nfwd_)*nx_);
     casadi_assert(nrx_ == nadj_*nx_);
   
-    // Allocate space for inputs
-    input_.resize(INTEGRATOR_NUM_IN);
-    input(INTEGRATOR_X0)  = DMatrix(f_.input(DAE_X).sparsity(),0);
-    input(INTEGRATOR_P)   = DMatrix(f_.input(DAE_P).sparsity(),0);
-    if(!g_.isNull()){
-      input(INTEGRATOR_RX0)  = DMatrix(g_.input(RDAE_RX).sparsity(),0);
-      input(INTEGRATOR_RP)  = DMatrix(g_.input(RDAE_RP).sparsity(),0);
-    }
-  
-    // Allocate space for outputs
-    output_.resize(INTEGRATOR_NUM_OUT);
-    output(INTEGRATOR_XF) = DMatrix(f_.output(DAE_ODE).sparsity(),0);
-    output(INTEGRATOR_QF) = DMatrix(f_.output(DAE_QUAD).sparsity(),0);
-    if(!g_.isNull()){
-      output(INTEGRATOR_RXF)  = DMatrix(g_.output(RDAE_ODE).sparsity(),0);
-      output(INTEGRATOR_RQF)  = DMatrix(g_.output(RDAE_QUAD).sparsity(),0);
-    }
-
     // Inputs
     setNumInputs(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*nadj_);
     int ind=0;
