@@ -604,7 +604,7 @@ namespace CasADi{
     integrator.assignNode(create(dae_,(1+nfwd_)*(1+nfwd) + nadj_*nadj - 1, (1+nfwd_)*nadj + nadj_*(1+nfwd)));
     integrator->setF(aug_dae.first);
     integrator->setG(aug_dae.second);
-    //    integrator->new_signature_ = true;
+    //        integrator->new_signature_ = true;
   
     // Copy options
     integrator.setOption(dictionary());
@@ -615,7 +615,58 @@ namespace CasADi{
   
     // Initialize the integrator since we will call it below
     integrator.init();
-  
+    vector<MX> integrator_in = integrator.symbolicInput();
+    vector<MX> integrator_out = integrator.call(integrator_in);
+
+    if(false && new_signature_){
+      vector<MX> ret_in(integrator_in.size());
+      vector<MX> ret_out(integrator_out.size());
+      vector<MX>::const_iterator integrator_in_it = integrator_in.begin();
+      vector<MX>::const_iterator integrator_out_it = integrator_out.begin();
+
+      for(int d1=-1; d1<nfwd; ++d1){
+        for(int d2=-1; d2<nfwd_; ++d2){
+          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
+          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
+
+          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
+          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
+        }
+      }
+
+      for(int d1=0; d1<nadj; ++d1){
+        for(int d2=0; d2<nadj_; ++d2){
+          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
+          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
+
+          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
+          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
+        }
+      }
+
+      for(int d1=0; d1<nadj; ++d1){
+        for(int d2=-1; d2<nfwd_; ++d2){
+          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_in_it++;
+          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_in_it++;
+
+          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_out_it++;
+          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_out_it++;
+        }
+      }
+
+      for(int d1=-1; d1<nfwd; ++d1){
+        for(int d2=0; d2<nadj_; ++d2){
+          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_XF] = *integrator_in_it++;
+          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_QF] = *integrator_in_it++;
+
+          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_X0] = *integrator_out_it++;
+          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_P] = *integrator_out_it++;
+        }
+      }
+
+      return MXFunction(ret_in,ret_out);
+    }
+
     // All inputs of the return function
     vector<MX> ret_in;
     vector<MX> ret_in_new;
@@ -651,21 +702,23 @@ namespace CasADi{
       dd[INTEGRATOR_P] = msym(ss.str(),input(INTEGRATOR_P).sparsity());
       p_aug.push_back(dd[INTEGRATOR_P]);
       ret_in_new.push_back(dd[INTEGRATOR_P]);
-    
-      // Backward state
-      ss.clear();
-      ss << "rx0";
-      if(dir>=0) ss << "_" << dir;
-      dd[INTEGRATOR_RX0] = msym(ss.str(),input(INTEGRATOR_RX0).sparsity());
-      rx0_aug.push_back(dd[INTEGRATOR_RX0]);
 
-      // Backward parameter
-      ss.clear();
-      ss << "rp";
-      if(dir>=0) ss << "_" << dir;
-      dd[INTEGRATOR_RP] = msym(ss.str(),input(INTEGRATOR_RP).sparsity());
-      rp_aug.push_back(dd[INTEGRATOR_RP]);
-    
+      if(!new_signature_){
+        // Backward state
+        ss.clear();
+        ss << "rx0";
+        if(dir>=0) ss << "_" << dir;
+        dd[INTEGRATOR_RX0] = msym(ss.str(),input(INTEGRATOR_RX0).sparsity());
+        rx0_aug.push_back(dd[INTEGRATOR_RX0]);
+        
+        // Backward parameter
+        ss.clear();
+        ss << "rp";
+        if(dir>=0) ss << "_" << dir;
+        dd[INTEGRATOR_RP] = msym(ss.str(),input(INTEGRATOR_RP).sparsity());
+        rp_aug.push_back(dd[INTEGRATOR_RP]);
+      }
+        
       // Add to input vector
       ret_in.insert(ret_in.end(),dd.begin(),dd.end());
     }
@@ -688,23 +741,25 @@ namespace CasADi{
       rp_aug.push_back(dd[INTEGRATOR_QF]);
       ret_in_new.push_back(dd[INTEGRATOR_QF]);
 
-      // Backward differential states becomes forward differential states
-      ss.clear();
-      ss << "rxf" << "_" << dir;
-      dd[INTEGRATOR_RXF] = msym(ss.str(),output(INTEGRATOR_RXF).sparsity());
-      x0_aug.push_back(dd[INTEGRATOR_RXF]);
-    
-      // Backward quadratures becomes (forward) parameters
-      ss.clear();
-      ss << "rqf" << "_" << dir;
-      dd[INTEGRATOR_RQF] = msym(ss.str(),output(INTEGRATOR_RQF).sparsity());
-      p_aug.push_back(dd[INTEGRATOR_RQF]);
-    
+      if(!new_signature_){
+
+        // Backward differential states becomes forward differential states
+        ss.clear();
+        ss << "rxf" << "_" << dir;
+        dd[INTEGRATOR_RXF] = msym(ss.str(),output(INTEGRATOR_RXF).sparsity());
+        x0_aug.push_back(dd[INTEGRATOR_RXF]);
+        
+        // Backward quadratures becomes (forward) parameters
+        ss.clear();
+        ss << "rqf" << "_" << dir;
+        dd[INTEGRATOR_RQF] = msym(ss.str(),output(INTEGRATOR_RQF).sparsity());
+        p_aug.push_back(dd[INTEGRATOR_RQF]);
+      }
+        
       // Add to input vector
       ret_in.insert(ret_in.end(),dd.begin(),dd.end());
     }
 
-    vector<MX> integrator_out;
     if(integrator->new_signature_){
       integrator_out = integrator.call(ret_in_new);
     } else {
