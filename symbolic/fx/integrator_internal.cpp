@@ -53,7 +53,6 @@ namespace CasADi{
     inputScheme_ = SCHEME_IntegratorInput;
     outputScheme_ = SCHEME_IntegratorOutput;
 
-    new_signature_ = true;
     f_ = dae_;
   }
 
@@ -114,8 +113,8 @@ namespace CasADi{
     // Get derivative function
     FX dfcn = derivative(nfdir, nadir);
 
-    int integ_in = new_signature_ ? NEW_INTEGRATOR_NUM_IN : INTEGRATOR_NUM_IN;
-    int integ_out = new_signature_ ? NEW_INTEGRATOR_NUM_OUT : INTEGRATOR_NUM_OUT;
+    int integ_in = NEW_INTEGRATOR_NUM_IN;
+    int integ_out = NEW_INTEGRATOR_NUM_OUT;
 
     // Pass function values
     int input_index = 0;
@@ -235,37 +234,31 @@ namespace CasADi{
       output(INTEGRATOR_RQF)  = DMatrix(g_.output(RDAE_QUAD).sparsity(),0);
     }
 
-    if(new_signature_){
-
-      // Inputs
-      setNumInputs(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*nadj_);
-      int ind=0;
-      for(int d=-1; d<nfwd_; ++d){
-        input(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
-        input(ind++) = DMatrix(dae_.input(DAE_P).sparsity(),0);
-      }
-      for(int d=0; d<nadj_; ++d){
-        input(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
-        input(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
-      }
-      casadi_assert(ind == getNumInputs());
-
-      // Outputs
-      setNumOutputs(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*nadj_);
-      ind=0;
-      for(int d=-1; d<nfwd_; ++d){
-        output(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
-        output(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
-      }
-      for(int d=0; d<nadj_; ++d){
-        output(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
-        output(ind++) = DMatrix(dae_.input(DAE_P).sparsity(),0);
-      }
-      casadi_assert(ind == getNumOutputs());
+    // Inputs
+    setNumInputs(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*nadj_);
+    int ind=0;
+    for(int d=-1; d<nfwd_; ++d){
+      input(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
+      input(ind++) = DMatrix(dae_.input(DAE_P).sparsity(),0);
     }
+    for(int d=0; d<nadj_; ++d){
+      input(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
+      input(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
+    }
+    casadi_assert(ind == getNumInputs());
 
-
-
+    // Outputs
+    setNumOutputs(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*nadj_);
+    ind=0;
+    for(int d=-1; d<nfwd_; ++d){
+      output(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
+      output(ind++) = DMatrix(dae_.output(DAE_QUAD).sparsity(),0);
+    }
+    for(int d=0; d<nadj_; ++d){
+      output(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
+      output(ind++) = DMatrix(dae_.input(DAE_P).sparsity(),0);
+    }
+    casadi_assert(ind == getNumOutputs());
   
     // Call the base class method
     FXInternal::init();
@@ -605,7 +598,6 @@ namespace CasADi{
     integrator.assignNode(create(dae_,(1+nfwd_)*(1+nfwd) + nadj_*nadj - 1, (1+nfwd_)*nadj + nadj_*(1+nfwd)));
     integrator->setF(aug_dae.first);
     integrator->setG(aug_dae.second);
-    //        integrator->new_signature_ = true;
   
     // Copy options
     integrator.setOption(dictionary());
@@ -619,266 +611,52 @@ namespace CasADi{
     vector<MX> integrator_in = integrator.symbolicInput();
     vector<MX> integrator_out = integrator.call(integrator_in);
 
-    if(new_signature_){
-      vector<MX> ret_in(integrator_in.size());
-      vector<MX> ret_out(integrator_out.size());
-      vector<MX>::const_iterator integrator_in_it = integrator_in.begin();
-      vector<MX>::const_iterator integrator_out_it = integrator_out.begin();
+    vector<MX> ret_in(integrator_in.size());
+    vector<MX> ret_out(integrator_out.size());
+    vector<MX>::const_iterator integrator_in_it = integrator_in.begin();
+    vector<MX>::const_iterator integrator_out_it = integrator_out.begin();
 
-      for(int d1=-1; d1<nfwd; ++d1){
-        for(int d2=-1; d2<nfwd_; ++d2){
-          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
-          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
+    for(int d1=-1; d1<nfwd; ++d1){
+      for(int d2=-1; d2<nfwd_; ++d2){
+        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
 
-          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
-          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
-        }
+        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
       }
-
-      for(int d1=0; d1<nadj; ++d1){
-        for(int d2=0; d2<nadj_; ++d2){
-          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
-          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
-
-          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
-          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
-        }
-      }
-
-      for(int d1=0; d1<nadj; ++d1){
-        for(int d2=-1; d2<nfwd_; ++d2){
-          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_in_it++;
-          ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_in_it++;
-
-          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_out_it++;
-          ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_out_it++;
-        }
-      }
-
-      for(int d1=-1; d1<nfwd; ++d1){
-        for(int d2=0; d2<nadj_; ++d2){
-          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_XF] = *integrator_in_it++;
-          ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_QF] = *integrator_in_it++;
-
-          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_X0] = *integrator_out_it++;
-          ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_P] = *integrator_out_it++;
-        }
-      }
-
-      return MXFunction(ret_in,ret_out);
     }
 
-    // All inputs of the return function
-    vector<MX> ret_in;
-    vector<MX> ret_in_new;
+    for(int d1=0; d1<nadj; ++d1){
+      for(int d2=0; d2<nadj_; ++d2){
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
 
-    ret_in.reserve(INTEGRATOR_NUM_IN*(1+nfwd) + INTEGRATOR_NUM_OUT*nadj);
-    ret_in_new.reserve(NEW_INTEGRATOR_NUM_IN*(1+nfwd) + NEW_INTEGRATOR_NUM_OUT*nadj);
-
-    // Augmented state
-    vector<MX> x0_aug, p_aug, rx0_aug, rp_aug;
-  
-    // Temp stringstream
-    stringstream ss;
-    
-    // Inputs or forward/adjoint seeds in one direction
-    vector<MX> dd;
-
-    // Add nondifferentiated inputs and forward seeds
-    dd.resize(INTEGRATOR_NUM_IN);
-    for(int dir=-1; dir<nfwd; ++dir){
-    
-      // Differential state
-      ss.clear();
-      ss << "x0";
-      if(dir>=0) ss << "_" << dir;
-      dd[INTEGRATOR_X0] = msym(ss.str(),input(INTEGRATOR_X0).sparsity());
-      x0_aug.push_back(dd[INTEGRATOR_X0]);
-      ret_in_new.push_back(dd[INTEGRATOR_X0]);
-
-      // Parameter
-      ss.clear();
-      ss << "p";
-      if(dir>=0) ss << "_" << dir;
-      dd[INTEGRATOR_P] = msym(ss.str(),input(INTEGRATOR_P).sparsity());
-      p_aug.push_back(dd[INTEGRATOR_P]);
-      ret_in_new.push_back(dd[INTEGRATOR_P]);
-
-      if(!new_signature_){
-        // Backward state
-        ss.clear();
-        ss << "rx0";
-        if(dir>=0) ss << "_" << dir;
-        dd[INTEGRATOR_RX0] = msym(ss.str(),input(INTEGRATOR_RX0).sparsity());
-        rx0_aug.push_back(dd[INTEGRATOR_RX0]);
-        
-        // Backward parameter
-        ss.clear();
-        ss << "rp";
-        if(dir>=0) ss << "_" << dir;
-        dd[INTEGRATOR_RP] = msym(ss.str(),input(INTEGRATOR_RP).sparsity());
-        rp_aug.push_back(dd[INTEGRATOR_RP]);
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
       }
-        
-      // Add to input vector
-      ret_in.insert(ret_in.end(),dd.begin(),dd.end());
-    }
-    
-    // Add adjoint seeds
-    dd.resize(INTEGRATOR_NUM_OUT);
-    for(int dir=0; dir<nadj; ++dir){
-    
-      // Differential states become backward differential state
-      ss.clear();
-      ss << "xf" << "_" << dir;
-      dd[INTEGRATOR_XF] = msym(ss.str(),output(INTEGRATOR_XF).sparsity());
-      rx0_aug.push_back(dd[INTEGRATOR_XF]);
-      ret_in_new.push_back(dd[INTEGRATOR_XF]);
-
-      // Quadratures become backward parameters
-      ss.clear();
-      ss << "qf" << "_" << dir;
-      dd[INTEGRATOR_QF] = msym(ss.str(),output(INTEGRATOR_QF).sparsity());
-      rp_aug.push_back(dd[INTEGRATOR_QF]);
-      ret_in_new.push_back(dd[INTEGRATOR_QF]);
-
-      if(!new_signature_){
-
-        // Backward differential states becomes forward differential states
-        ss.clear();
-        ss << "rxf" << "_" << dir;
-        dd[INTEGRATOR_RXF] = msym(ss.str(),output(INTEGRATOR_RXF).sparsity());
-        x0_aug.push_back(dd[INTEGRATOR_RXF]);
-        
-        // Backward quadratures becomes (forward) parameters
-        ss.clear();
-        ss << "rqf" << "_" << dir;
-        dd[INTEGRATOR_RQF] = msym(ss.str(),output(INTEGRATOR_RQF).sparsity());
-        p_aug.push_back(dd[INTEGRATOR_RQF]);
-      }
-        
-      // Add to input vector
-      ret_in.insert(ret_in.end(),dd.begin(),dd.end());
     }
 
-    if(integrator->new_signature_){
-      integrator_out = integrator.call(ret_in_new);
-    } else {
-      // Call the integrator
-      vector<MX> integrator_in(INTEGRATOR_NUM_IN);
-      integrator_in[INTEGRATOR_X0] = vertcat(x0_aug);
-      integrator_in[INTEGRATOR_P] = vertcat(p_aug);
-      integrator_in[INTEGRATOR_RX0] = vertcat(rx0_aug);
-      integrator_in[INTEGRATOR_RP] = vertcat(rp_aug);
-      integrator_out = integrator.call(integrator_in);
-    }
-  
-    // Offset in each of the above vectors
-    vector<int> xf_offset(1,0), rxf_offset(1,0), qf_offset(1,0), rqf_offset(1,0);
-    for(int dir=-1; dir<nfwd; ++dir){
-      xf_offset.push_back(xf_offset.back()+nfx_);
-      qf_offset.push_back(qf_offset.back()+nfq_);
-      rxf_offset.push_back(rxf_offset.back()+nrx_);
-      rqf_offset.push_back(rqf_offset.back()+nrq_);
-    }
-    for(int dir=0; dir<nadj; ++dir){
-      rxf_offset.push_back(rxf_offset.back()+nfx_);
-      rqf_offset.push_back(rqf_offset.back()+nfp_);
-      xf_offset.push_back(xf_offset.back()+nrx_);
-      qf_offset.push_back(qf_offset.back()+nrp_);
+    for(int d1=0; d1<nadj; ++d1){
+      for(int d2=-1; d2<nfwd_; ++d2){
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_in_it++;
+
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_out_it++;
+      }
     }
 
-    if(integrator->new_signature_){
-      
-      log("IntegratorInternal::getDerivative","end");
+    for(int d1=-1; d1<nfwd; ++d1){
+      for(int d2=0; d2<nadj_; ++d2){
+        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_XF] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_QF] = *integrator_in_it++;
 
-      if(new_signature_){
-        casadi_assert(integrator_out.size() == INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
-
-        // Create derivative function and return
-        return MXFunction(ret_in_new,integrator_out);
-      } else {
-        vector<MX>::const_iterator it = integrator_out.begin();
-        vector<MX> ret_out;
-        ret_out.reserve(INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
-  
-        // Collect the nondifferentiated results and forward sensitivities
-        for(int dir=-1; dir<nfwd; ++dir){
-          ret_out.push_back(*it++);
-          ret_out.push_back(*it++);
-          ret_out.push_back(MX());
-          ret_out.push_back(MX());
-        }
-  
-        // Collect the adjoint sensitivities
-        for(int dir=0; dir<nadj; ++dir){
-          ret_out.push_back(*it++);
-          ret_out.push_back(*it++);
-          ret_out.push_back(MX());
-          ret_out.push_back(MX());
-        }
-        casadi_assert(it==integrator_out.end());
-        casadi_assert(ret_out.size() == INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
-        return MXFunction(ret_in,ret_out);
-        
+        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_X0] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_P] = *integrator_out_it++;
       }
-      
-    } else {
-
-      // Augmented results
-      vector<MX> xf_aug, rxf_aug, qf_aug, rqf_aug;
-      if(integrator_out[INTEGRATOR_XF].isNull()){
-        xf_aug.resize(xf_offset.size()-1);
-      } else {
-        xf_aug = vertsplit(integrator_out[INTEGRATOR_XF],xf_offset);
-      }
-      if(integrator_out[INTEGRATOR_RXF].isNull()){
-        rxf_aug.resize(rxf_offset.size()-1);
-      } else {
-        rxf_aug = vertsplit(integrator_out[INTEGRATOR_RXF],rxf_offset);
-      }
-      if(integrator_out[INTEGRATOR_QF].isNull()){
-        qf_aug.resize(qf_offset.size()-1);
-      } else {
-        qf_aug = vertsplit(integrator_out[INTEGRATOR_QF],qf_offset);
-      }
-      if(integrator_out[INTEGRATOR_RQF].isNull()){
-        rqf_aug.resize(rqf_offset.size()-1);
-      } else {
-        rqf_aug = vertsplit(integrator_out[INTEGRATOR_RQF],rqf_offset);
-      }
-  
-      // All outputs of the return function
-      vector<MX>::const_iterator xf_aug_it = xf_aug.begin();
-      vector<MX>::const_iterator rxf_aug_it = rxf_aug.begin();
-      vector<MX>::const_iterator qf_aug_it = qf_aug.begin();
-      vector<MX>::const_iterator rqf_aug_it = rqf_aug.begin();
-  
-      vector<MX> ret_out;
-      ret_out.reserve(INTEGRATOR_NUM_OUT*(1+nfwd) + INTEGRATOR_NUM_IN*nadj);
-  
-      // Collect the nondifferentiated results and forward sensitivities
-      for(int dir=-1; dir<nfwd; ++dir){
-        ret_out.push_back(*xf_aug_it++);
-        ret_out.push_back(*qf_aug_it++);
-        ret_out.push_back(*rxf_aug_it++);
-        ret_out.push_back(*rqf_aug_it++);
-      }
-  
-      // Collect the adjoint sensitivities
-      for(int dir=0; dir<nadj; ++dir){
-        ret_out.push_back(*rxf_aug_it++);
-        ret_out.push_back(*rqf_aug_it++);
-        ret_out.push_back(*xf_aug_it++);
-        ret_out.push_back(*qf_aug_it++);
-      }
-  
-      log("IntegratorInternal::getDerivative","end (old)");
-
-      // Create derivative function and return
-      return MXFunction(ret_in,ret_out);
     }
-  
+
+    return MXFunction(ret_in,ret_out);
   }
 
   FX IntegratorInternal::getJacobian(int iind, int oind, bool compact, bool symmetric){
@@ -903,12 +681,11 @@ namespace CasADi{
     nsensB_ = nsensB;
     nsensB_store_ = nsensB_store;
   
-    if(!new_signature_){
-      // Initialize output (relevant for integration with a zero advance time )
-      copy(input(INTEGRATOR_X0).begin(),input(INTEGRATOR_X0).end(),output(INTEGRATOR_XF).begin());
-      for(int i=0; i<nfdir_; ++i)
-        copy(fwdSeed(INTEGRATOR_X0,i).begin(),fwdSeed(INTEGRATOR_X0,i).end(),fwdSens(INTEGRATOR_XF,i).begin());
-    }
+    // Initialize output (relevant for integration with a zero advance time )
+    copy(input(INTEGRATOR_X0).begin(),input(INTEGRATOR_X0).end(),output(INTEGRATOR_XF).begin());
+    for(int i=0; i<nfdir_; ++i)
+      copy(fwdSeed(INTEGRATOR_X0,i).begin(),fwdSeed(INTEGRATOR_X0,i).end(),fwdSens(INTEGRATOR_XF,i).begin());
+
     log("IntegratorInternal::reset","end");
   }
 
