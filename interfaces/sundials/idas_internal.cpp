@@ -484,7 +484,7 @@ namespace CasADi{
     f_.setInput(&t,DAE_T);
     f_.setInput(xz,DAE_X);
     f_.setInput(xz+nfx_,DAE_Z);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     if(monitored("res")){
       cout << "DAE_T    = " << t << endl;
@@ -555,7 +555,7 @@ namespace CasADi{
     f_.setInput(&t,DAE_T);
     f_.setInput(xz,DAE_X);
     f_.setInput(xz+nfx_,DAE_Z);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
     
     // Pass seeds of the state vectors
     f_.setFwdSeed(v,DAE_X);
@@ -599,11 +599,11 @@ namespace CasADi{
     g_.setInput(&t,RDAE_T);
     g_.setInput(xz,RDAE_X);
     g_.setInput(xz+nfx_,RDAE_Z);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
+    getP(g_.input(RDAE_P));
 
     g_.setInput(xzB,RDAE_RX);
     g_.setInput(xzB+nrx_,RDAE_RZ);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getRP(g_.input(RDAE_RP));
   
     // Pass seeds of the state vectors
     g_.fwdSeed(RDAE_T).setZero();
@@ -688,7 +688,7 @@ namespace CasADi{
     f_.setInput(&t,DAE_T);
     f_.setInput(xz,DAE_X);
     f_.setInput(xz+nfx_,DAE_Z);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
   
     // Calculate the forward sensitivities, nfdir_f_ directions at a time
     for(int offset=0; offset<nfdir_; offset += nfdir_f_){
@@ -699,7 +699,7 @@ namespace CasADi{
         f_.fwdSeed(DAE_T,dir).setZero();
         f_.setFwdSeed(NV_DATA_S(xzF[offset+dir]),DAE_X,dir);
         f_.setFwdSeed(NV_DATA_S(xzF[offset+dir])+nfx_,DAE_Z,dir);
-        f_.setFwdSeed(fwdSeed(INTEGRATOR_P,offset+dir),DAE_P,dir);
+        getP(f_.fwdSeed(DAE_P,dir),offset+dir);
       }
     
       // Evaluate the AD forward algorithm
@@ -1114,7 +1114,7 @@ namespace CasADi{
     f_.setInput(&t,DAE_T);
     f_.setInput(xz,DAE_X);
     f_.setInput(xz+nfx_,DAE_Z);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
 
     // Evaluate
     f_.evaluate();
@@ -1133,14 +1133,14 @@ namespace CasADi{
     f_.setInput(&t,DAE_T);
     f_.setInput(NV_DATA_S(xz),DAE_X);
     f_.setInput(NV_DATA_S(xz)+nfx_,DAE_Z);
-    f_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(f_.input(DAE_P));
      
     // Pass forward seeds
     for(int i=0; i<nfdir_; ++i){
       f_.fwdSeed(DAE_T).setZero();
       f_.setFwdSeed(NV_DATA_S(xzF[i]),DAE_X);
       f_.setFwdSeed(NV_DATA_S(xzF[i])+nfx_,DAE_Z);
-      f_.setFwdSeed(fwdSeed(INTEGRATOR_P,i),DAE_P);
+      getP(f_.fwdSeed(DAE_P),i);
    
       // Evaluate the AD forward algorithm
       f_.evaluate(1,0);
@@ -1171,8 +1171,8 @@ namespace CasADi{
     g_.setInput(&t,RDAE_T);
     g_.setInput(xz,RDAE_X);
     g_.setInput(xz+nfx_,RDAE_Z);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(g_.input(RDAE_P));
+    getRP(g_.input(RDAE_RP));
     g_.setInput(xzA,RDAE_RX);
     g_.setInput(xzA+nrx_,RDAE_RZ);
 
@@ -1242,8 +1242,8 @@ namespace CasADi{
     g_.setInput(&t,RDAE_T);
     g_.setInput(xz,RDAE_X);
     g_.setInput(xz+nfx_,RDAE_Z);
-    g_.setInput(input(INTEGRATOR_P),RDAE_P);
-    g_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(g_.input(RDAE_P));
+    getRP(g_.input(RDAE_RP));
     g_.setInput(xzA,RDAE_RX);
     g_.setInput(xzA+nrx_,RDAE_RZ);
   
@@ -1292,7 +1292,7 @@ namespace CasADi{
     jac_.setInput(&t,DAE_T);
     jac_.setInput(NV_DATA_S(xz),DAE_X);
     jac_.setInput(NV_DATA_S(xz)+nfx_,DAE_Z);
-    jac_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(jac_.input(DAE_P));
     jac_.setInput(cj,DAE_NUM_IN);
     
     // Evaluate Jacobian
@@ -1343,8 +1343,8 @@ namespace CasADi{
     jacB_.setInput(&t,RDAE_T);
     jacB_.setInput(NV_DATA_S(xz),RDAE_X);
     jacB_.setInput(NV_DATA_S(xz)+nfx_,RDAE_Z);
-    jacB_.setInput(input(INTEGRATOR_P),RDAE_P);
-    jacB_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(jacB_.input(RDAE_P));
+    getRP(jacB_.input(RDAE_RP));
     jacB_.setInput(NV_DATA_S(xzB),RDAE_RX);
     jacB_.setInput(NV_DATA_S(xzB)+nrx_,RDAE_RZ);
     jacB_.setInput(cjB,RDAE_NUM_IN);
@@ -1421,7 +1421,7 @@ namespace CasADi{
     jac_.setInput(&t,DAE_T);
     jac_.setInput(NV_DATA_S(xz),DAE_X);
     jac_.setInput(NV_DATA_S(xz)+nfx_,DAE_Z);
-    jac_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(jac_.input(DAE_P));
     jac_.setInput(cj,DAE_NUM_IN);
 
     // Evaluate jacobian
@@ -1472,8 +1472,8 @@ namespace CasADi{
     jacB_.setInput(&t,RDAE_T);
     jacB_.setInput(NV_DATA_S(xz),RDAE_X);
     jacB_.setInput(NV_DATA_S(xz)+nfx_,RDAE_Z);
-    jacB_.setInput(input(INTEGRATOR_P),RDAE_P);
-    jacB_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(jacB_.input(RDAE_P));
+    getRP(jacB_.input(RDAE_RP));
     jacB_.setInput(NV_DATA_S(xzB),RDAE_RX);
     jacB_.setInput(NV_DATA_S(xzB)+nrx_,RDAE_RZ);
     jacB_.setInput(cjB,RDAE_NUM_IN);
@@ -1666,7 +1666,7 @@ namespace CasADi{
     jac_.setInput(&t,DAE_T);
     jac_.setInput(NV_DATA_S(xz),DAE_X);
     jac_.setInput(NV_DATA_S(xz)+nfx_,DAE_Z);
-    jac_.setInput(input(INTEGRATOR_P),DAE_P);
+    getP(jac_.input(DAE_P));
     jac_.setInput(cj,DAE_NUM_IN);
 
     if(monitored("psetup")) {
@@ -1713,8 +1713,8 @@ namespace CasADi{
     jacB_.setInput(&t,RDAE_T);
     jacB_.setInput(NV_DATA_S(xz),RDAE_X);
     jacB_.setInput(NV_DATA_S(xz)+nfx_,RDAE_Z);
-    jacB_.setInput(input(INTEGRATOR_P),RDAE_P);
-    jacB_.setInput(input(INTEGRATOR_RP),RDAE_RP);
+    getP(jacB_.input(RDAE_P));
+    getRP(jacB_.input(RDAE_RP));
     jacB_.setInput(NV_DATA_S(xzB),RDAE_RX);
     jacB_.setInput(NV_DATA_S(xzB)+nrx_,RDAE_RZ);
     jacB_.setInput(cjB,RDAE_NUM_IN);
