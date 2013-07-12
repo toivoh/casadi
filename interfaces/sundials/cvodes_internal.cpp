@@ -468,28 +468,7 @@ namespace CasADi{
       flag = CVode(mem_, t_out, x_, &t_, CV_NORMAL);
       if(flag!=CV_SUCCESS && flag!=CV_TSTOP_RETURN) cvodes_error("CVode",flag);
     }
-
-    if(new_signature_){
-      double* x = NV_DATA_S(x_);
-      casadi_assert(NV_LENGTH_S(x_) == nx_ * (1+nfwd_) );
-
-      // Nondifferentiated output
-      output(NEW_INTEGRATOR_XF).set(x);
-      x += nx_;
-
-      // Forward sensitivities
-      for(int d=0; d<nfwd_; ++d){
-        output(NEW_INTEGRATOR_NUM_OUT*(d+1)+NEW_INTEGRATOR_XF).set(x);
-        x += nx_;
-      }
-
-      // Adjoint sensitivities
-      // ..
-
-    } else {
-      output(INTEGRATOR_XF).set(NV_DATA_S(x_));
-    }
-
+    setXF(x_);
   
     if(nfq_>0){
       double tret;
@@ -504,28 +483,8 @@ namespace CasADi{
       if(flag != CV_SUCCESS) cvodes_error("CVodeGetSens",flag);
     
       for(int d=0; d<nsens_; ++d){
-        double* x = NV_DATA_S(xF_[d]);
-        if(new_signature_){
-          casadi_assert(NV_LENGTH_S(xF_[d]) == nx_ * (1+nfwd_) );
-
-          // Nondifferentiated output
-          fwdSens(NEW_INTEGRATOR_XF,d).set(x);
-          x += nx_;
-
-          // Forward sensitivities
-          for(int d=0; d<nfwd_; ++d){
-            fwdSens(NEW_INTEGRATOR_NUM_OUT*(1+d)+NEW_INTEGRATOR_XF,d).set(x);
-            x += nx_;
-          }
-
-          // Adjoint sensitivities
-          // ..
-
-        } else {
-          fwdSens(INTEGRATOR_XF,d).set(x);
-        }
+        setXF(xF_[d],d);
       }
-
 
       if(nfq_>0){
         double tret;

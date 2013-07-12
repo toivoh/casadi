@@ -913,10 +913,10 @@ namespace CasADi{
     }
   
     // Save the final state
-    copy(NV_DATA_S(xz_),NV_DATA_S(xz_)+nfx_,output(INTEGRATOR_XF).begin());
+    setXF(NV_DATA_S(xz_));
     if(nsens_>0){
       for(int i=0; i<nfdir_; ++i){
-        copy(NV_DATA_S(xzF_[i]),NV_DATA_S(xzF_[i])+nfx_,fwdSens(INTEGRATOR_XF,i).begin());
+        setXF(NV_DATA_S(xzF_[i]),i);
       }
     }
     
