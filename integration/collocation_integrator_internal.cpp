@@ -254,10 +254,10 @@ namespace CasADi{
     casadi_assert_message(gv.size()==V.size(),"Implicit function unknowns and equations do not match");
 
     // Implicit function
-    vector<MX> ifcn_in(1+NEW_INTEGRATOR_NUM_IN);
+    vector<MX> ifcn_in(1+INTEGRATOR_NUM_IN);
     ifcn_in[0] = V;
-    ifcn_in[1+NEW_INTEGRATOR_X0] = X0;
-    ifcn_in[1+NEW_INTEGRATOR_P] = P;
+    ifcn_in[1+INTEGRATOR_X0] = X0;
+    ifcn_in[1+INTEGRATOR_P] = P;
     FX ifcn = MXFunction(ifcn_in,gv);
     ifcn.init(); 
     if(expand){
@@ -266,10 +266,10 @@ namespace CasADi{
     }
   
     // Auxiliary output function
-    vector<MX> afcn_out(1+NEW_INTEGRATOR_NUM_OUT);
+    vector<MX> afcn_out(1+INTEGRATOR_NUM_OUT);
     afcn_out[0] = V;
-    afcn_out[1+NEW_INTEGRATOR_XF] = X[nk][0];
-    afcn_out[1+NEW_INTEGRATOR_QF] = QF;
+    afcn_out[1+INTEGRATOR_XF] = X[nk][0];
+    afcn_out[1+INTEGRATOR_QF] = QF;
     FX afcn = MXFunction(ifcn_in,afcn_out);
     afcn.init();
     if(expand){
@@ -293,9 +293,9 @@ namespace CasADi{
     implicit_solver_.init();
   
     // Nonlinear constraint function input
-    vector<MX> gfcn_in(NEW_INTEGRATOR_NUM_IN);
-    gfcn_in[NEW_INTEGRATOR_X0] = X0;
-    gfcn_in[NEW_INTEGRATOR_P] = P;
+    vector<MX> gfcn_in(INTEGRATOR_NUM_IN);
+    gfcn_in[INTEGRATOR_X0] = X0;
+    gfcn_in[INTEGRATOR_P] = P;
     ifcn_in[0] = implicit_solver_.call(gfcn_in).front();
     vector<MX> gfcn_out = afcn.call(ifcn_in);
     gfcn_out.erase(gfcn_out.begin());
@@ -366,7 +366,7 @@ namespace CasADi{
     
       // Use supplied integrator, if any
       if(has_startup_integrator){
-        for(int iind=0; iind<NEW_INTEGRATOR_NUM_IN; ++iind){
+        for(int iind=0; iind<INTEGRATOR_NUM_IN; ++iind){
           startup_integrator_.input(iind).set(input(iind));
         }
       

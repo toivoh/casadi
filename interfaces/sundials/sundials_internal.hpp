@@ -120,7 +120,7 @@ namespace CasADi{
 
     void getX0(double* v, int dir = -1){
       for(int d=-1; d<nfwd_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_X0;
+        int ind = INTEGRATOR_NUM_IN*(1+d)+INTEGRATOR_X0;
         if(dir<0){
           input(ind).get(v);
         } else {
@@ -144,7 +144,7 @@ namespace CasADi{
 
     void setQF(double* v, int dir = -1){
       for(int d=-1; d<nfwd_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_OUT*(1+d)+NEW_INTEGRATOR_QF;
+        int ind = INTEGRATOR_NUM_OUT*(1+d)+INTEGRATOR_QF;
         if(dir<0){
           output(ind).set(v);
         } else {
@@ -168,7 +168,7 @@ namespace CasADi{
 
     void setXF(double* v, int dir = -1){
       for(int d=-1; d<nfwd_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_OUT*(1+d)+NEW_INTEGRATOR_XF;
+        int ind = INTEGRATOR_NUM_OUT*(1+d)+INTEGRATOR_XF;
         if(dir<0){
           output(ind).set(v);
         } else {
@@ -183,7 +183,7 @@ namespace CasADi{
 
       double* v = p.ptr();
       for(int d=-1; d<nfwd_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_IN*(1+d)+NEW_INTEGRATOR_P;
+        int ind = INTEGRATOR_NUM_IN*(1+d)+INTEGRATOR_P;
         if(dir<0){
           input(ind).get(v);
         } else {
@@ -207,7 +207,7 @@ namespace CasADi{
 
     void getRX0(double* v, int dir = -1){
       for(int d=0; d<nadj_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_XF;
+        int ind = INTEGRATOR_NUM_IN*(1+nfwd_) + INTEGRATOR_NUM_OUT*d + INTEGRATOR_XF;
         if(dir<0){
           input(ind).get(v);
         } else {
@@ -231,7 +231,7 @@ namespace CasADi{
 
     void setRXF(double* v, int dir = -1){
       for(int d=0; d<nadj_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_X0;
+        int ind = INTEGRATOR_NUM_OUT*(1+nfwd_) + INTEGRATOR_NUM_IN*d + INTEGRATOR_X0;
         if(dir<0){
           output(ind).set(v);
         } else {
@@ -255,7 +255,7 @@ namespace CasADi{
 
     void setRQF(double* v, int dir = -1){
       for(int d=0; d<nadj_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d + NEW_INTEGRATOR_P;
+        int ind = INTEGRATOR_NUM_OUT*(1+nfwd_) + INTEGRATOR_NUM_IN*d + INTEGRATOR_P;
         if(dir<0){
           output(ind).set(v);
         } else {
@@ -270,7 +270,7 @@ namespace CasADi{
 
       double* v = p.ptr();
       for(int d=0; d<nadj_; ++d){
-        int ind = NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d + NEW_INTEGRATOR_QF;
+        int ind = INTEGRATOR_NUM_IN*(1+nfwd_) + INTEGRATOR_NUM_OUT*d + INTEGRATOR_QF;
         if(dir<0){
           input(ind).get(v);
         } else {

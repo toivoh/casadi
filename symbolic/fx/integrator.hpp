@@ -121,19 +121,6 @@ namespace CasADi{
     INTEGRATOR_NUM_OUT
   };
 
-
-  enum NewIntegratorInput{
-    NEW_INTEGRATOR_X0, 
-    NEW_INTEGRATOR_P,
-    NEW_INTEGRATOR_NUM_IN
-  };
-
-  enum NewIntegratorOutput{
-    NEW_INTEGRATOR_XF,
-    NEW_INTEGRATOR_QF,
-    NEW_INTEGRATOR_NUM_OUT
-  };
-
   /// Forward declaration of internal class
   class IntegratorInternal;
 

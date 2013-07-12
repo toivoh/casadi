@@ -113,8 +113,8 @@ namespace CasADi{
     // Get derivative function
     FX dfcn = derivative(nfdir, nadir);
 
-    int integ_in = NEW_INTEGRATOR_NUM_IN;
-    int integ_out = NEW_INTEGRATOR_NUM_OUT;
+    int integ_in = INTEGRATOR_NUM_IN;
+    int integ_out = INTEGRATOR_NUM_OUT;
 
     // Pass function values
     int input_index = 0;
@@ -217,7 +217,7 @@ namespace CasADi{
     casadi_assert(nrx_ == nadj_*nx_);
   
     // Inputs
-    setNumInputs(NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*nadj_);
+    setNumInputs(INTEGRATOR_NUM_IN*(1+nfwd_) + INTEGRATOR_NUM_OUT*nadj_);
     int ind=0;
     for(int d=-1; d<nfwd_; ++d){
       input(ind++) = DMatrix(dae_.input(DAE_X).sparsity(),0);
@@ -230,7 +230,7 @@ namespace CasADi{
     casadi_assert(ind == getNumInputs());
 
     // Outputs
-    setNumOutputs(NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*nadj_);
+    setNumOutputs(INTEGRATOR_NUM_OUT*(1+nfwd_) + INTEGRATOR_NUM_IN*nadj_);
     ind=0;
     for(int d=-1; d<nfwd_; ++d){
       output(ind++) = DMatrix(dae_.output(DAE_ODE).sparsity(),0);
@@ -560,41 +560,41 @@ namespace CasADi{
 
     for(int d1=-1; d1<nfwd; ++d1){
       for(int d2=-1; d2<nfwd_; ++d2){
-        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
-        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+d1) + INTEGRATOR_NUM_IN*(1+d2) + INTEGRATOR_X0] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+d1) + INTEGRATOR_NUM_IN*(1+d2) + INTEGRATOR_P] = *integrator_in_it++;
 
-        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
-        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+d1) + INTEGRATOR_NUM_OUT*(1+d2) + INTEGRATOR_XF] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+d1) + INTEGRATOR_NUM_OUT*(1+d2) + INTEGRATOR_QF] = *integrator_out_it++;
       }
     }
 
     for(int d1=0; d1<nadj; ++d1){
       for(int d2=0; d2<nadj_; ++d2){
-        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_in_it++;
-        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + INTEGRATOR_NUM_IN*(1+d2) + INTEGRATOR_X0] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + INTEGRATOR_NUM_IN*(1+d2) + INTEGRATOR_P] = *integrator_in_it++;
 
-        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_out_it++;
-        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + INTEGRATOR_NUM_OUT*(1+d2) + INTEGRATOR_XF] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + INTEGRATOR_NUM_OUT*(1+d2) + INTEGRATOR_QF] = *integrator_out_it++;
       }
     }
 
     for(int d1=0; d1<nadj; ++d1){
       for(int d2=-1; d2<nfwd_; ++d2){
-        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_XF] = *integrator_in_it++;
-        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + NEW_INTEGRATOR_NUM_OUT*(1+d2) + NEW_INTEGRATOR_QF] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + INTEGRATOR_NUM_OUT*(1+d2) + INTEGRATOR_XF] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+nfwd) + getNumOutputs()*d1 + INTEGRATOR_NUM_OUT*(1+d2) + INTEGRATOR_QF] = *integrator_in_it++;
 
-        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_X0] = *integrator_out_it++;
-        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + NEW_INTEGRATOR_NUM_IN*(1+d2) + NEW_INTEGRATOR_P] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + INTEGRATOR_NUM_IN*(1+d2) + INTEGRATOR_X0] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+nfwd) + getNumInputs()*d1 + INTEGRATOR_NUM_IN*(1+d2) + INTEGRATOR_P] = *integrator_out_it++;
       }
     }
 
     for(int d1=-1; d1<nfwd; ++d1){
       for(int d2=0; d2<nadj_; ++d2){
-        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_XF] = *integrator_in_it++;
-        ret_in[getNumInputs()*(1+d1) + NEW_INTEGRATOR_NUM_IN*(1+nfwd_) + NEW_INTEGRATOR_NUM_OUT*d2 + NEW_INTEGRATOR_QF] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+d1) + INTEGRATOR_NUM_IN*(1+nfwd_) + INTEGRATOR_NUM_OUT*d2 + INTEGRATOR_XF] = *integrator_in_it++;
+        ret_in[getNumInputs()*(1+d1) + INTEGRATOR_NUM_IN*(1+nfwd_) + INTEGRATOR_NUM_OUT*d2 + INTEGRATOR_QF] = *integrator_in_it++;
 
-        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_X0] = *integrator_out_it++;
-        ret_out[getNumOutputs()*(1+d1) + NEW_INTEGRATOR_NUM_OUT*(1+nfwd_) + NEW_INTEGRATOR_NUM_IN*d2 + NEW_INTEGRATOR_P] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+d1) + INTEGRATOR_NUM_OUT*(1+nfwd_) + INTEGRATOR_NUM_IN*d2 + INTEGRATOR_X0] = *integrator_out_it++;
+        ret_out[getNumOutputs()*(1+d1) + INTEGRATOR_NUM_OUT*(1+nfwd_) + INTEGRATOR_NUM_IN*d2 + INTEGRATOR_P] = *integrator_out_it++;
       }
     }
 
