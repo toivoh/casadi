@@ -270,8 +270,7 @@ namespace CasADi{
 
       // Copy the forward seeds
       for(int i=0; i<nfdir_; ++i){
-        const Matrix<double>& x = fwdSeed(INTEGRATOR_X0,i);
-        copy(x.begin(), x.begin()+nfx_, NV_DATA_S(xzF_[i]));
+        getX0(NV_DATA_S(xzF_[i]),i);
         N_VConst(0.0,xzdotF_[i]);
       }
 
@@ -754,8 +753,7 @@ namespace CasADi{
     int flag;
   
     // Copy to N_Vectors
-    const Matrix<double>& x0 = input(INTEGRATOR_X0);
-    copy(x0.begin(), x0.begin()+nfx_, NV_DATA_S(xz_));
+    getX0(NV_DATA_S(xz_));
     copy(init_z_.begin(), init_z_.end(), NV_DATA_S(xz_)+nfx_);
     copy(init_xdot_.begin(), init_xdot_.end(), NV_DATA_S(xzdot_));
   
@@ -776,8 +774,7 @@ namespace CasADi{
     if(nsens>0){
       // Get the forward seeds
       for(int i=0; i<nfdir_; ++i){
-        const Matrix<double>& x0_seed = fwdSeed(INTEGRATOR_X0,i);
-        copy(x0_seed.begin(), x0_seed.begin()+nfx_, NV_DATA_S(xzF_[i]));
+        getX0(NV_DATA_S(xzF_[i]),i);
         N_VConst(0.0,xzdotF_[i]);
       }
     
