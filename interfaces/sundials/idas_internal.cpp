@@ -945,9 +945,7 @@ namespace CasADi{
     N_VConst(0.0, rq_);
   
     // Get the adjoint seeds
-    const Matrix<double> &xf_aseed = input(INTEGRATOR_RX0);
-    copy(xf_aseed.begin(),xf_aseed.end(),NV_DATA_S(rxz_));
-  
+    getRX0(NV_DATA_S(rxz_));
   
     if(isInitAdj_){
       flag = IDAReInitB(mem_, whichB_, tf_, rxz_, rxzdot_);
