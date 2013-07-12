@@ -504,47 +504,7 @@ namespace CasADi{
         }
       }
     
-      // Add dependency on rx0 or rp
-      for(int k=0; k<2; ++k){
-        int iind = k==0 ? INTEGRATOR_RX0 : INTEGRATOR_RP;
-        const DMatrix& m = inputNoCheck(iind);
-        const bvec_t* v = reinterpret_cast<const bvec_t*>(m.ptr());
-        for(int i=0; i<m.size(); ++i){
-          all_depend |= v[i];
-        }
-      }
-    
-      // Propagate to rxf and rqf
-      for(int k=0; k<2; ++k){
-        int oind = k==0 ? INTEGRATOR_RXF : INTEGRATOR_RQF;
-        DMatrix& m = outputNoCheck(oind);
-        bvec_t* v = reinterpret_cast<bvec_t*>(m.ptr());
-        for(int i=0; i<m.size(); ++i){
-          v[i] = all_depend;
-        }
-      }
-    
     } else {
-    
-      // First find out what influences only rxf and rqf
-      for(int k=0; k<2; ++k){
-        int oind = k==0 ? INTEGRATOR_RXF : INTEGRATOR_RQF;
-        const DMatrix& m = outputNoCheck(oind);
-        const bvec_t* v = get_bvec_t(m.data());
-        for(int i=0; i<m.size(); ++i){
-          all_depend |= v[i];
-        }
-      }
-    
-      // Propagate to rx0 and rp
-      for(int k=0; k<2; ++k){
-        int iind = k==0 ? INTEGRATOR_RX0 : INTEGRATOR_RP;
-        DMatrix& m = inputNoCheck(iind);
-        bvec_t* v = get_bvec_t(m.data());
-        for(int i=0; i<m.size(); ++i){
-          v[i] = all_depend;
-        }
-      }
     
       // Add dependencies to xf and qf
       for(int k=0; k<2; ++k){

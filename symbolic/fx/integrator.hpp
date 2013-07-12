@@ -107,10 +107,6 @@ namespace CasADi{
     INTEGRATOR_X0, 
     /// Parameters [p]
     INTEGRATOR_P,
-    /// Backward differential state at the final time [rx0]
-    INTEGRATOR_RX0, 
-    /// Backward parameter vector [rp]
-    INTEGRATOR_RP, 
     /// Number of input arguments of an integrator
     INTEGRATOR_NUM_IN
   };
@@ -121,10 +117,6 @@ namespace CasADi{
     INTEGRATOR_XF,
     ///  Quadrature state at the final time [qf]
     INTEGRATOR_QF,
-    ///  Backward differential state at the initial time [rxf]
-    INTEGRATOR_RXF,
-    ///  Backward quadrature state at the initial time [rqf]
-    INTEGRATOR_RQF,
     /// Number of output arguments of an integrator
     INTEGRATOR_NUM_OUT
   };
