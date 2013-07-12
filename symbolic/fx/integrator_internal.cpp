@@ -50,8 +50,11 @@ namespace CasADi{
     // Negative number of parameters for consistancy checking
     nfp_ = -1;
   
-    inputScheme_ = SCHEME_IntegratorInput;
-    outputScheme_ = SCHEME_IntegratorOutput;
+    // Avoid non-matching schemes
+    if(nfwd_==0 && nadj_==0){
+      inputScheme_ = SCHEME_IntegratorInput;
+      outputScheme_ = SCHEME_IntegratorOutput;
+    }
 
     f_ = dae_;
   }
